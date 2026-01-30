@@ -142,11 +142,15 @@ const IslamicCalendar = () => {
       }
     } else {
       setSelectedMonth(selectedMonth - 1);
-            <div className="flex gap-4 mt-2 text-sm justify-center flex-wrap">
-              <span className="text-gray-600">{englishMonths[selectedMonth]}</span>
-              <span className="text-purple-600 font-semibold">{toBanglaNumber(selectedYear)}</span>
-              <span className="text-green-600 font-semibold">{banglaBarshoMonths[selectedMonth]}</span>
-              <span className="text-orange-600">{arabicMonths[selectedMonth % 12]}</span>
+    }
+  };
+
+  const nextMonth = () => {
+    if (selectedMonth === 11) {
+      if (selectedYear < 2030) {
+        setSelectedMonth(0);
+        setSelectedYear(selectedYear + 1);
+      }
     } else {
       setSelectedMonth(selectedMonth + 1);
     }
@@ -169,10 +173,11 @@ const IslamicCalendar = () => {
             <CalendarIcon className="w-6 h-6 text-purple-600" />
             <span>{banglaMonths[selectedMonth]}</span>
           </h3>
-          <div className="flex gap-4 mt-2 text-sm">
+          <div className="flex gap-4 mt-2 text-sm justify-center flex-wrap">
             <span className="text-gray-600">{englishMonths[selectedMonth]}</span>
             <span className="text-purple-600 font-semibold">{toBanglaNumber(selectedYear)}</span>
-            <span className="text-green-600">{arabicMonths[selectedMonth % 12]}</span>
+            <span className="text-green-600 font-semibold">{banglaBarshoMonths[selectedMonth]}</span>
+            <span className="text-orange-600">{arabicMonths[selectedMonth % 12]}</span>
           </div>
         </div>
 
