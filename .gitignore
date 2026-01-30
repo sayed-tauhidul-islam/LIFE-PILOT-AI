@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+.vscode/

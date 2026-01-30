@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-01-29T17:38:26.405505",
+  "total_users": 500,
+  "datasets": {
+    "personal_finance": 12000,
+    "transactions": 50000,
+    "financial_goals": 1256,
+    "investments": 1240
+  },
+  "income_stats": {
+    "mean": 100989.11273166667,
+    "median": 98484.67000000001,
+    "min": 19312.45,
+    "max": 209739.55
+  },
+  "expense_stats": {
+    "mean": 86215.05375666666,
+    "median": 81728.35
+  },
+  "savings_rate_mean": 20.0195725
+}
