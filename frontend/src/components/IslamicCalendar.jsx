@@ -99,9 +99,17 @@ const IslamicCalendar = () => {
     '2030-12-25': 'বড়দিন (যিশু খ্রিস্টের জন্মদিন)'
   };
 
-  // শুক্রবার চেক করা
+  // শুক্রবার ও শনিবার চেক করা
   const isFriday = (date) => {
     return date.getDay() === 5;
+  };
+
+  const isSaturday = (date) => {
+    return date.getDay() === 6;
+  };
+
+  const isWeekend = (date) => {
+    return date.getDay() === 5 || date.getDay() === 6;
   };
 
   // ছুটির দিন চেক করা
@@ -213,6 +221,8 @@ const IslamicCalendar = () => {
 
           const holiday = getHoliday(date);
           const friday = isFriday(date);
+          const saturday = isSaturday(date);
+          const weekend = isWeekend(date);
           const isToday =
             date.getDate() === currentDate.getDate() &&
             date.getMonth() === currentDate.getMonth() &&
@@ -223,27 +233,30 @@ const IslamicCalendar = () => {
               key={index}
               className={`aspect-square p-2 rounded-lg border-2 transition-all cursor-pointer group relative ${
                 isToday
-                  ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-700 shadow-lg scale-110'
-                  : holiday
+                  ? 'bg-gradient-to-br from-green-500 to-green-600 text-white border-green-700 shadow-lg scale-110 z-10'
+                  : holiday || weekend
                   ? 'bg-gradient-to-br from-red-500 to-red-600 text-white border-red-700 hover:scale-105 hover:shadow-lg'
-                  : friday
-                  ? 'bg-gradient-to-br from-green-500 to-green-600 text-white border-green-700 hover:scale-105 hover:shadow-lg'
                   : 'bg-white border-gray-200 hover:border-purple-400 hover:bg-purple-50 hover:scale-105'
               }`}
             >
               <div className="flex flex-col items-center justify-center h-full">
-                <span className={`text-lg font-bold ${isToday || holiday || friday ? 'text-white' : 'text-gray-800'}`}>
+                <span className={`text-lg font-bold ${isToday || holiday || weekend ? 'text-white' : 'text-gray-800'}`}>
                   {toBanglaNumber(date.getDate())}
                 </span>
                 {holiday && (
                   <span className="text-xs mt-1 text-white font-semibold">🎉</span>
                 )}
+                {weekend && !holiday && (
+                  <span className="text-xs mt-1 text-white font-semibold">📅</span>
+                )}
               </div>
 
               {/* হোভার টুলটিপ */}
-              {(holiday || friday) && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-xl">
-                  <div className="font-bold">{holiday || 'জুমার দিন'}</div>
+              {(holiday || weekend || isToday) && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-xl">
+                  <div className="font-bold">
+                    {isToday ? 'আজ' : holiday ? holiday : friday ? 'জুমার দিন (শুক্রবার)' : 'শনিবার (সাপ্তাহিক ছুটি)'}
+                  </div>
                   <div className="text-gray-300">{toBanglaNumber(date.getDate())} {banglaMonths[date.getMonth()]}</div>
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                 </div>
@@ -257,16 +270,12 @@ const IslamicCalendar = () => {
       <div className="mt-6 pt-4 border-t border-gray-200">
         <div className="flex flex-wrap gap-4 justify-center text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded"></div>
+            <div className="w-4 h-4 bg-gradient-to-br from-green-500 to-green-600 rounded"></div>
             <span className="text-gray-700">আজ</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-gradient-to-br from-red-500 to-red-600 rounded"></div>
-            <span className="text-gray-700">ছুটির দিন</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-gradient-to-br from-green-500 to-green-600 rounded"></div>
-            <span className="text-gray-700">জুমা</span>
+            <span className="text-gray-700">ছুটির দিন / শুক্র-শনিবার</span>
           </div>
         </div>
       </div>
