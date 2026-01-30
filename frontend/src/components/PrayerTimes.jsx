@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FaMosque, FaClock, FaMapMarkerAlt, FaEdit, FaSave } from 'react-icons/fa';
+import { FaMosque, FaClock, FaMapMarkerAlt, FaEdit, FaSave, FaSun } from 'react-icons/fa';
 import api from '../api';
 
 const PrayerTimes = ({ theme }) => {
   const [prayerTimes, setPrayerTimes] = useState({
-    fajr: '05:45',
-    dhuhr: '12:30',
-    asr: '15:45',
-    maghrib: '18:15',
-    isha: '19:45'
+    fajr: '05:25',
+    dhuhr: '12:20',
+    asr: '03:13',
+    maghrib: '05:51',
+    isha: '07:06'
   });
   const [nextPrayer, setNextPrayer] = useState({ name: '', time: '', remaining: '' });
   const [location, setLocation] = useState({ city: 'ঢাকা', country: 'বাংলাদেশ', lat: 23.8103, lon: 90.4125 });
@@ -162,45 +162,94 @@ const PrayerTimes = ({ theme }) => {
   };
 
   return (
-    <div id="prayer" className={`${colors.bg} border-2 ${colors.border} p-6 rounded-lg shadow-lg`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className={`text-xl font-bold ${colors.text} flex items-center`}>
-          <FaMosque className="mr-2 text-red-600" size={24} />
-          নামাজের সময়সূচী
-        </h3>
-        <div className="text-right">
-          <p className="text-sm text-red-600 font-semibold">পরবর্তী: {nextPrayer.name}</p>
-          <p className={`text-xs ${colors.text}`}>{nextPrayer.remaining}</p>
+    <div id="prayer" className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-2xl overflow-hidden border-2 border-green-300">
+      {/* Header with Date and Time */}
+      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">১০ শাবান</h2>
+            <p className="text-green-100">শুক্রবার - ৩০ জানুয়ারি</p>
+            <p className="text-green-200 text-sm mt-1">১৬ মাঘ</p>
+          </div>
+          <div className="text-right">
+            <FaSun className="text-yellow-300 text-5xl mb-2" />
+            <p className="text-4xl font-bold">{new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+            <p className="text-sm mt-1 text-green-200">সূর্যোদয় | সূর্যাস্ত</p>
+          </div>
         </div>
       </div>
 
       {loading && (
         <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-          <p className={`text-sm ${colors.text} mt-2`}>লোড হচ্ছে...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+          <p className="text-sm text-gray-700 mt-2">লোড হচ্ছে...</p>
         </div>
       )}
 
-      <div className="space-y-3">
-        {Object.entries(prayerTimes).map(([prayer, time]) => {
-          const isNext = nextPrayer.name === prayerNames[prayer];
-          return (
-            <div
-              key={prayer}
-              className={`flex justify-between items-center p-3 rounded transition-all ${
-                isNext
-                  ? 'bg-red-600 text-white font-bold shadow-lg scale-105'
-                  : `${colors.bg} ${colors.text} hover:bg-opacity-80`
-              }`}
-            >
-              <div className="flex items-center">
-                <FaClock className="mr-2" size={16} />
-                <span className="font-semibold">{prayerNames[prayer]}</span>
-              </div>
-              <span className="font-mono text-lg">{time}</span>
+      <div className="flex gap-6 p-6">
+        {/* Circular Timer */}
+        <div className="flex-shrink-0">
+          <div className="text-center mb-4">
+            <h3 className="text-2xl font-bold text-blue-900 mb-1">সালাতুদ দূহা</h3>
+            <p className="text-sm text-gray-600">ওয়াক্ত শেষ হতে বাকি</p>
+          </div>
+          <div className="relative w-48 h-48">
+            <svg className="w-full h-full transform -rotate-90">
+              <circle
+                cx="96"
+                cy="96"
+                r="88"
+                stroke="#e5e7eb"
+                strokeWidth="12"
+                fill="none"
+              />
+              <circle
+                cx="96"
+                cy="96"
+                r="88"
+                stroke="#10b981"
+                strokeWidth="12"
+                fill="none"
+                strokeDasharray="553"
+                strokeDashoffset="138"
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-4xl font-bold text-gray-800">{nextPrayer.remaining || '০২:০৮:৪৯'}</span>
             </div>
-          );
-        })}
+          </div>
+        </div>
+
+        {/* Prayer Times List */}
+        <div className="flex-1 space-y-2">
+          {Object.entries(prayerTimes).map(([prayer, time]) => {
+            const isNext = nextPrayer.name === prayerNames[prayer];
+            return (
+              <div
+                key={prayer}
+                className={`flex justify-between items-center p-4 rounded-xl transition-all border-2 ${
+                  isNext
+                    ? 'bg-red-50 border-red-500 shadow-md'
+                    : 'bg-white border-gray-200 hover:border-green-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl font-bold text-gray-800">{prayerNames[prayer]}</span>
+                  {isNext && (
+                    <span className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full">
+                      <span className="text-white text-xs">ⓘ</span>
+                    </span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-gray-800">{time}</span>
+                  {isNext && <p className="text-xs text-gray-500 mt-1">মধ্যরাত ১১:৩৭</p>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Location Section */}
