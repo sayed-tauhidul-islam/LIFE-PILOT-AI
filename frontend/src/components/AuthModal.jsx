@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { FaUser, FaEnvelope, FaLock, FaTimes, FaEye, FaEyeSlash, FaCheckCircle, FaExclamationCircle, FaIdCard } from 'react-icons/fa'
 
+// Get API URL from environment variable
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
   const [isLoginMode, setIsLoginMode] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
@@ -61,7 +64,7 @@ const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
 
   const validateEmail = async (email) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/validate-email', {
+      const response = await fetch(`${API_URL}/api/auth/validate-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -82,7 +85,7 @@ const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
     }
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/validate-password', {
+      const response = await fetch(`${API_URL}/api/auth/validate-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
@@ -122,7 +125,7 @@ const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
     try {
       if (isLoginMode) {
         // Login
-        const response = await fetch('http://localhost:5000/api/auth/login', {
+        const response = await fetch(`${API_URL}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -131,6 +134,10 @@ const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
             remember_me: rememberMe
           })
         })
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`)
+        }
 
         const data = await response.json()
 
@@ -171,7 +178,7 @@ const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
           return
         }
 
-        const response = await fetch('http://localhost:5000/api/auth/register', {
+        const response = await fetch(`${API_URL}/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -181,6 +188,10 @@ const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
             password: formData.password
           })
         })
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`)
+        }
 
         const data = await response.json()
 
@@ -194,8 +205,14 @@ const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
         }
       }
     } catch (error) {
-      setError('Connection error. Please try again.')
       console.error('Auth error:', error)
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+        setError('সার্ভারের সাথে সংযোগ স্থাপন করা যাচ্ছে না। দয়া করে আপনার ইন্টারনেট সংযোগ চেক করুন এবং পুনরায় চেষ্টা করুন।')
+      } else if (error.message.includes('Server error')) {
+        setError('সার্ভার ত্রুটি। অনুগ্রহ করে পরে আবার চেষ্টা করুন।')
+      } else {
+        setError('লগইন/সাইনআপ ব্যর্থ হয়েছে। পুনরায় চেষ্টা করুন।')
+      }
     } finally {
       setLoading(false)
     }
@@ -204,10 +221,14 @@ const AuthModal = ({ isOpen, onClose, onLogin, theme }) => {
   const handleGuestLogin = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:5000/api/auth/guest', {
+      const response = await fetch(`${API_URL}/api/auth/guest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`)
+      }
 
       const data = await response.json()
 

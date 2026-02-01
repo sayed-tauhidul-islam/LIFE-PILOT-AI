@@ -214,12 +214,60 @@ VITE_API_URL = https://life-pilot-backend.onrender.com
 
 ### 📱 Mobile Testing
 
-#### Android/iOS Testing
+#### লোকাল নেটওয়ার্কে Mobile Testing (Same WiFi)
 
-1. আপনার mobile browser এ website open করুন
-2. সব features test করুন
-3. Touch targets check করুন
+**ধাপ ১: আপনার Computer এর LAN IP খুঁজুন**
+
+```powershell
+# PowerShell এ run করুন
+ipconfig
+
+# খুঁজুন: IPv4 Address (উদাহরণ: 192.168.0.102)
+```
+
+**ধাপ ২: Frontend .env ফাইল আপডেট করুন**
+
+```bash
+# frontend/.env ফাইল edit করুন
+VITE_API_URL=http://192.168.0.102:5000
+```
+
+**Note**: `192.168.0.102` এর জায়গায় আপনার IP address দিন
+
+**ধাপ ৩: Frontend Restart করুন সব network interface এ**
+
+```bash
+cd frontend
+npm run dev -- --host
+```
+
+এটি show করবে:
+
+```
+Local:   http://localhost:5173
+Network: http://192.168.0.102:5173
+```
+
+**ধাপ ৪: Mobile এ Open করুন**
+
+1. Mobile এ same WiFi connect করুন
+2. Mobile browser এ open করুন: `http://192.168.0.102:5173`
+3. Login/Signup test করুন
+4. সব features test করুন
+
+**Common Issues:**
+
+- **Connection error**: Backend server চালু আছে কিনা চেক করুন (`python app.py`)
+- **Can't connect**: Windows Firewall temporarily disable করুন অথবা port 5000 এবং 5173 allow করুন
+- **Wrong IP**: `ipconfig` দিয়ে সঠিক IP verify করুন
+
+#### Production Mobile Testing
+
+1. Vercel এ deploy করার পর mobile browser এ website open করুন
+2. সব features test করুন (Login, Health, Finance, Prayer Times, Medicine Tracker)
+3. Touch targets check করুন (44px minimum)
 4. Responsive layout verify করুন
+5. Network throttling test করুন (3G/4G speed)
 
 ### 🔄 Future Updates করার জন্য
 

@@ -71,9 +71,9 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
                     href={item.path}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-1.5 whitespace-nowrap text-white hover:bg-red-600 hover:scale-105 border border-transparent hover:border-red-400"
+                    className="px-4 py-2.5 rounded-lg font-bold text-base transition-all flex items-center gap-2 whitespace-nowrap text-white hover:bg-red-600 hover:scale-105 border border-transparent hover:border-red-400"
                   >
-                    <Icon className="text-sm" />
+                    <Icon className="text-lg" />
                     {item.label}
                   </a>
                 )
@@ -83,13 +83,13 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-4 py-2.5 rounded-lg font-bold text-base transition-all flex items-center gap-2 whitespace-nowrap ${
                     isActive
                       ? 'bg-red-600 text-white shadow-lg scale-105 border border-red-400'
                       : 'text-white hover:bg-red-600 hover:scale-105 border border-transparent hover:border-red-400'
                   }`}
                 >
-                  <Icon className="text-sm" />
+                  <Icon className="text-lg" />
                   {item.label}
                 </Link>
               )
@@ -168,9 +168,9 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
                       href={item.path}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-3 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 bg-red-600 bg-opacity-30 text-white hover:bg-opacity-50 border border-red-500/50"
+                      className="px-4 py-3 rounded-lg font-bold text-base transition-all flex items-center gap-2 bg-red-600 bg-opacity-30 text-white hover:bg-opacity-50 border border-red-500/50 touch-target"
                     >
-                      <Icon />
+                      <Icon className="text-lg" />
                       {item.label}
                     </a>
                   )
@@ -181,13 +181,13 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMenuOpen(false)}
-                    className={`px-4 py-3 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                    className={`px-4 py-3 rounded-lg font-bold text-base transition-all flex items-center gap-2 touch-target ${
                       isActive
                         ? 'bg-red-600 text-white shadow-lg border border-red-400'
                         : 'bg-red-600 bg-opacity-30 text-white hover:bg-opacity-50 border border-red-500/50'
                     }`}
                   >
-                    <Icon />
+                    <Icon className="text-lg" />
                     {item.label}
                   </Link>
                 )

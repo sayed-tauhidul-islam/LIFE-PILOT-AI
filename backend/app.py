@@ -19,7 +19,17 @@ from werkzeug.utils import secure_filename
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS to allow all origins for development and mobile access
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True,
+        "max_age": 3600
+    }
+})
 
 # Initialize database, AI advisor, file manager, auth manager, and finance managers
 db = Database()
@@ -1506,9 +1516,9 @@ def get_prayer_times():
 health_profiles_store = []
 health_products_store = []
 
-@app.route('/api/health/profile', methods=['GET'])
-def get_health_profile():
-    """Get user's health profile"""
+@app.route('/api/health/profile-temp', methods=['GET'])
+def get_health_profile_temp():
+    """Get user's health profile (temporary endpoint)"""
     try:
         user_id = request.args.get('user_id', 'demo_user')
         
@@ -1596,9 +1606,9 @@ def update_health_profile():
             'message': str(e)
         }), 500
 
-@app.route('/api/health/ai-suggestions', methods=['POST'])
-def get_health_ai_suggestions():
-    """Get AI health suggestions based on user's health data"""
+@app.route('/api/health/ai-suggestions-temp', methods=['POST'])
+def get_health_ai_suggestions_temp():
+    """Get AI health suggestions based on user's health data (temporary endpoint)"""
     try:
         data = request.json
         health_data = data.get('healthData', {})

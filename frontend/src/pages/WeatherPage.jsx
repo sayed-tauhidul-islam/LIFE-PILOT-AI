@@ -167,10 +167,11 @@ const WeatherPage = ({ theme }) => {
             <iframe
               src={`https://www.meteoblue.com/en/weather/widget/three/${encodeURIComponent(location.city)}?geoloc=fixed&nocurrent=0&noforecast=0&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&layout=bright`}
               frameBorder="0"
-              scrolling="no"
+              scrolling="yes"
               allowTransparency="true"
-              sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox"
-              className="w-full h-[600px] rounded-lg"
+              allow="geolocation"
+              className="w-full h-[600px] md:h-[500px] rounded-lg"
+              style={{ minHeight: '600px' }}
               title="আবহাওয়া পূর্বাভাস"
             ></iframe>
             <div className="text-center mt-2">
