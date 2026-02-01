@@ -18,7 +18,7 @@ const InvestmentAdvisor = () => {
 
   const getRecommendation = async () => {
     if (!investmentAmount || parseFloat(investmentAmount) <= 0) {
-      alert('Please enter a valid investment amount');
+      alert('সঠিক বিনিয়োগের পরিমাণ লিখুন');
       return;
     }
 
@@ -32,7 +32,8 @@ const InvestmentAdvisor = () => {
       setRecommendation(response.data);
     } catch (error) {
       console.error('Error getting investment advice:', error);
-      alert('Failed to get investment advice');
+      const errorMsg = error.response?.data?.message || error.message || 'Network Error';
+      alert(`বিনিয়োগ পরামর্শ পেতে সমস্যা হয়েছে!\nError: ${errorMsg}\nব্যাকএন্ড সার্ভার চালু আছে কিনা চেক করুন।`);
     } finally {
       setLoading(false);
     }

@@ -65,12 +65,14 @@ const ExpenseTracker = () => {
     try {
       console.log('Sending expense data:', {
         ...newExpense,
-        amount: parseFloat(newExpense.amount)
+        amount: parseFloat(newExpense.amount),
+        created_at: new Date().toISOString()
       });
       
       const response = await api.post('/api/finance/expense', {
         ...newExpense,
-        amount: parseFloat(newExpense.amount)
+        amount: parseFloat(newExpense.amount),
+        created_at: new Date().toISOString()
       });
       
       console.log('Response:', response.data);
@@ -122,6 +124,49 @@ Error: ${error.response?.data?.message || error.message}
     return expenses
       .filter(exp => exp.category === category)
       .reduce((sum, exp) => sum + exp.amount, 0);
+  };
+
+  const getCategoryLastUpdate = (category) => {
+    const categoryExpenses = expenses.filter(exp => exp.category === category);
+    if (categoryExpenses.length === 0) return null;
+    
+    // Find the most recent expense
+    const latest = categoryExpenses.reduce((latest, exp) => {
+      const expDate = new Date(exp.created_at || exp.date);
+      const latestDate = new Date(latest.created_at || latest.date);
+      return expDate > latestDate ? exp : latest;
+    });
+    
+    return latest.created_at || latest.date;
+  };
+
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    // Bangla numbers
+    const banglaNumbers = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const toBangla = (num) => num.toString().split('').map(d => banglaNumbers[parseInt(d)]).join('');
+    
+    if (diffMins < 1) return 'এইমাত্র';
+    if (diffMins < 60) return `${toBangla(diffMins)} মিনিট আগে`;
+    if (diffHours < 24) return `${toBangla(diffHours)} ঘন্টা আগে`;
+    if (diffDays < 7) return `${toBangla(diffDays)} দিন আগে`;
+    
+    // Format as date with Bangla
+    const day = toBangla(date.getDate());
+    const month = toBangla(date.getMonth() + 1);
+    const year = toBangla(date.getFullYear());
+    const hours = toBangla(date.getHours().toString().padStart(2, '0'));
+    const mins = toBangla(date.getMinutes().toString().padStart(2, '0'));
+    
+    return `${day}/${month}/${year} ${hours}:${mins}`;
   };
   const getFilteredExpenses = () => {
     if (filterCategory === 'All') {
@@ -336,6 +381,11 @@ Error: ${error.response?.data?.message || error.message}
                       {((total / totalExpenses) * 100).toFixed(1)}% of total
                     </p>
                   )}
+                  {count > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      📅 {formatTimestamp(getCategoryLastUpdate(category.name))}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -383,6 +433,11 @@ Error: ${error.response?.data?.message || error.message}
                           <Calendar className="w-4 h-4" />
                           {expense.date} • {expense.payment_method}
                         </p>
+                        {expense.created_at && (
+                          <p className="text-xs text-purple-600 mt-1">
+                            🕐 যোগ করা হয়েছে: {formatTimestamp(expense.created_at)}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-4">

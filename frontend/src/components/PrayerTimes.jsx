@@ -1,625 +1,526 @@
 import React, { useState, useEffect } from 'react';
 import { FaMosque, FaClock, FaMapMarkerAlt, FaEdit, FaSave, FaSun, FaMoon, FaUtensils } from 'react-icons/fa';
-import api from '../api';
 
-const PrayerTimes = ({ theme }) => {
+const PrayerTimes = () => {
+  // State for prayer times
   const [prayerTimes, setPrayerTimes] = useState({
-    fajr: { start: '05:25', end: '06:45' },
-    sunrise: '06:45',
-    dhuhr: { start: '12:20', end: '16:13' },
-    asr: { start: '16:13', end: '17:51' },
-    maghrib: { start: '17:51', end: '19:06' },
-    isha: { start: '19:06', end: '05:25' },
-    sunset: '17:51'
+    Fajr: '05:25 AM',
+    Sunrise: '06:45 AM',
+    Dhuhr: '12:20 PM',
+    Asr: '04:13 PM',
+    Maghrib: '05:51 PM',
+    Isha: '07:06 PM'
   });
-  const [specialTimes, setSpecialTimes] = useState({
-    seheri: '05:15',
-    iftar: '17:51'
-  });
-  const [forbiddenTimes, setForbiddenTimes] = useState([
-    { name: 'সূর্যোদয়ের সময়', start: '06:35', end: '06:55' },
-    { name: 'দুপুরের সূর্য মাথার উপরে', start: '12:10', end: '12:30' },
-    { name: 'সূর্যাস্তের সময়', start: '17:41', end: '18:01' }
-  ]);
-  const [nextPrayer, setNextPrayer] = useState({ name: '', time: '', remaining: '', hours: 0, minutes: 0, seconds: 0 });
-  const [location, setLocation] = useState({ 
-    city: 'ঢাকা', 
-    district: 'ঢাকা',
-    upazila: '',
-    country: 'বাংলাদেশ', 
-    lat: 23.8103, 
-    lon: 90.4125 
-  });
-  const [editingLocation, setEditingLocation] = useState(false);
-  const [locationForm, setLocationForm] = useState({
-    city: 'ঢাকা',
-    district: 'ঢাকা',
-    upazila: '',
-    country: 'বাংলাদেশ'
-  });
-  const [loading, setLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
 
+  // State for special times
+  const [seheriTime, setSeheriTime] = useState('05:15 AM');
+  const [iftarTime, setIftarTime] = useState('05:51 PM');
+
+  // State for location
+  const [location, setLocation] = useState({
+    city: 'ঢাকা',
+    country: 'বাংলাদেশ',
+    lat: 23.8103,
+    lon: 90.4125
+  });
+
+  // State for editing location
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [locationInput, setLocationInput] = useState('ঢাকা');
+
+  // State for current time and next prayer
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [nextPrayer, setNextPrayer] = useState({
+    name: 'ফজর',
+    time: '05:25 AM',
+    remaining: '0h 0m 0s'
+  });
+  const [currentWaqt, setCurrentWaqt] = useState({
+    name: 'ফজর',
+    endTime: '06:45 AM',
+    remaining: '0h 0m 0s'
+  });
+
+  // Update current time every second
   useEffect(() => {
-    loadUserLocation();
-    // Update current time every second
-    const timeInterval = setInterval(() => {
+    const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-    return () => clearInterval(timeInterval);
+
+    return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (location.lat && location.lon) {
-      fetchPrayerTimes();
-      // Refresh prayer times daily at midnight
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      const timeUntilMidnight = tomorrow - now;
-      
-      const midnightTimer = setTimeout(() => {
-        fetchPrayerTimes();
-        // Set up daily refresh
-        const dailyRefresh = setInterval(fetchPrayerTimes, 24 * 60 * 60 * 1000);
-        return () => clearInterval(dailyRefresh);
-      }, timeUntilMidnight);
-
-      return () => clearTimeout(midnightTimer);
-    }
-  }, [location]);
-
+  // Calculate next prayer and current waqt
   useEffect(() => {
     calculateNextPrayer();
-    const interval = setInterval(calculateNextPrayer, 1000); // Update every second
-    return () => clearInterval(interval);
-  }, [prayerTimes, currentTime]);
+    calculateCurrentWaqt();
+  }, [currentTime, prayerTimes]);
 
-  const loadUserLocation = async () => {
-    try {
-      const response = await api.get('/api/user/location');
-      if (response.data && response.data.city) {
-        setLocation(response.data);
-      }
-    } catch (error) {
-      console.log('Using default location');
-    }
-  };
-
-  const saveUserLocation = async (locationData) => {
-    try {
-      await api.post('/api/user/location', locationData);
-    } catch (error) {
-      console.error('Error saving location:', error);
-    }
-  };
+  // Fetch prayer times from API
+  useEffect(() => {
+    fetchPrayerTimes();
+  }, [location]);
 
   const fetchPrayerTimes = async () => {
-    setLoading(true);
     try {
-      const response = await api.get(`/api/prayer-times?lat=${location.lat}&lon=${location.lon}&city=${location.city}`);
-      if (response.data && response.data.success) {
-        const timings = response.data.timings;
+      const response = await fetch(
+        `https://api.aladhan.com/v1/timings?latitude=${location.lat}&longitude=${location.lon}&method=2`
+      );
+      const data = await response.json();
+      
+      if (data.code === 200 && data.data && data.data.timings) {
+        const timings = data.data.timings;
         
-        // Set prayer times with adjusted start (+5 min) and end times (-15 min)
-        // Isha ends at midnight (12:00 AM)
         setPrayerTimes({
-          fajr: { 
-            start: addMinutes(timings.Fajr, 5), 
-            end: subtractMinutes(timings.Sunrise, 15) 
-          },
-          sunrise: timings.Sunrise,
-          dhuhr: { 
-            start: addMinutes(timings.Dhuhr, 5), 
-            end: subtractMinutes(timings.Asr, 15) 
-          },
-          asr: { 
-            start: addMinutes(timings.Asr, 5), 
-            end: subtractMinutes(timings.Maghrib, 15) 
-          },
-          maghrib: { 
-            start: addMinutes(timings.Maghrib, 5), 
-            end: subtractMinutes(timings.Isha, 15) 
-          },
-          isha: { 
-            start: addMinutes(timings.Isha, 5), 
-            end: '12:00 AM' 
-          },
-          sunset: timings.Sunset
+          Fajr: convertTo12Hour(timings.Fajr),
+          Sunrise: convertTo12Hour(timings.Sunrise),
+          Dhuhr: convertTo12Hour(timings.Dhuhr),
+          Asr: convertTo12Hour(timings.Asr),
+          Maghrib: convertTo12Hour(timings.Maghrib),
+          Isha: convertTo12Hour(timings.Isha)
         });
 
-        // Calculate Seheri (10 minutes before Fajr) and Iftar (at Maghrib)
-        const seheriTime = subtractMinutes(timings.Fajr, 10);
-        setSpecialTimes({
-          seheri: seheriTime,
-          iftar: timings.Maghrib
-        });
-
-        // Calculate forbidden times
-        const sunriseTime = timings.Sunrise;
-        const sunsetTime = timings.Sunset;
-        const dhuhrTime = timings.Dhuhr;
-        
-        setForbiddenTimes([
-          { 
-            name: 'সূর্যোদয়ের সময়', 
-            start: subtractMinutes(sunriseTime, 10), 
-            end: addMinutes(sunriseTime, 20) 
-          },
-          { 
-            name: 'দুপুরের সূর্য মাথার উপরে', 
-            start: subtractMinutes(dhuhrTime, 10), 
-            end: dhuhrTime 
-          },
-          { 
-            name: 'সূর্যাস্তের সময়', 
-            start: subtractMinutes(sunsetTime, 10), 
-            end: addMinutes(sunsetTime, 10) 
-          }
-        ]);
+        // Set seheri and iftar times
+        setSeheriTime(subtractMinutes(convertTo12Hour(timings.Fajr), 10));
+        setIftarTime(convertTo12Hour(timings.Maghrib));
       }
     } catch (error) {
       console.error('Error fetching prayer times:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const subtractMinutes = (timeStr, minutes) => {
-    const [hours, mins] = timeStr.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, mins - minutes, 0, 0);
-    return date.toTimeString().slice(0, 5);
+  const convertTo12Hour = (time24) => {
+    if (!time24) return '00:00 AM';
+    
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    
+    return `${hour12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
   };
 
-  const addMinutes = (timeStr, minutes) => {
-    const [hours, mins] = timeStr.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, mins + minutes, 0, 0);
-    return date.toTimeString().slice(0, 5);
+  const convertTo24Hour = (time12) => {
+    if (!time12) return '00:00';
+    
+    const [time, period] = time12.split(' ');
+    const [hours, minutes] = time.split(':');
+    let hour = parseInt(hours);
+    
+    if (period === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (period === 'AM' && hour === 12) {
+      hour = 0;
+    }
+    
+    return `${hour.toString().padStart(2, '0')}:${minutes}`;
   };
 
-  const handleLocationUpdate = async () => {
-    if (!locationForm.city.trim()) {
-      alert('অনুগ্রহ করে শহরের নাম লিখুন');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Build search query with available location data
-      const searchParts = [
-        locationForm.upazila,
-        locationForm.district || locationForm.city,
-        locationForm.country
-      ].filter(Boolean);
-      const searchQuery = searchParts.join(', ');
-
-      // Geocoding API call to get coordinates
-      const geoResponse = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`
-      );
-      const geoData = await geoResponse.json();
-
-      if (geoData.length > 0) {
-        const newLocation = {
-          ...locationForm,
-          lat: parseFloat(geoData[0].lat),
-          lon: parseFloat(geoData[0].lon)
-        };
-
-        setLocation(newLocation);
-        await saveUserLocation(newLocation);
-        setEditingLocation(false);
-        alert('✅ অবস্থান সফলভাবে আপডেট করা হয়েছে!');
-      } else {
-        alert('❌ অবস্থান খুঁজে পাওয়া যায়নি। অন্য নাম চেষ্টা করুন।');
-      }
-    } catch (error) {
-      console.error('Error updating location:', error);
-      alert('❌ অবস্থান আপডেট করতে সমস্যা হয়েছে');
-    } finally {
-      setLoading(false);
-    }
+  const subtractMinutes = (time12, mins) => {
+    const time24 = convertTo24Hour(time12);
+    const [hours, minutes] = time24.split(':');
+    let totalMinutes = parseInt(hours) * 60 + parseInt(minutes);
+    totalMinutes -= mins;
+    
+    if (totalMinutes < 0) totalMinutes += 1440; // Add 24 hours
+    
+    const newHours = Math.floor(totalMinutes / 60);
+    const newMinutes = totalMinutes % 60;
+    const ampm = newHours >= 12 ? 'PM' : 'AM';
+    const hour12 = newHours % 12 || 12;
+    
+    return `${hour12.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')} ${ampm}`;
   };
 
   const calculateNextPrayer = () => {
     const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const currentSeconds = now.getSeconds();
+    const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
 
-    const prayers = [
-      { name: 'ফজর', time: prayerTimes.fajr.start },
-      { name: 'জোহর', time: prayerTimes.dhuhr.start },
-      { name: 'আসর', time: prayerTimes.asr.start },
-      { name: 'মাগরিব', time: prayerTimes.maghrib.start },
-      { name: 'এশা', time: prayerTimes.isha.start }
+    const prayersList = [
+      { name: 'ফজর', nameEn: 'Fajr', time: prayerTimes.Fajr },
+      { name: 'যোহর', nameEn: 'Dhuhr', time: prayerTimes.Dhuhr },
+      { name: 'আসর', nameEn: 'Asr', time: prayerTimes.Asr },
+      { name: 'মাগরিব', nameEn: 'Maghrib', time: prayerTimes.Maghrib },
+      { name: 'এশা', nameEn: 'Isha', time: prayerTimes.Isha }
     ];
 
-    for (const prayer of prayers) {
-      const [hours, minutes] = prayer.time.split(':').map(Number);
-      const prayerMinutes = hours * 60 + minutes;
-      const prayerTotalSeconds = prayerMinutes * 60;
-      const currentTotalSeconds = currentMinutes * 60 + currentSeconds;
+    let nextPrayerInfo = null;
 
-      if (prayerTotalSeconds > currentTotalSeconds) {
-        const remainingSeconds = prayerTotalSeconds - currentTotalSeconds;
-        const hoursLeft = Math.floor(remainingSeconds / 3600);
-        const minutesLeft = Math.floor((remainingSeconds % 3600) / 60);
-        const secondsLeft = remainingSeconds % 60;
+    for (const prayer of prayersList) {
+      const prayerTime24 = convertTo24Hour(prayer.time);
+      const [hours, minutes] = prayerTime24.split(':');
+      const prayerTimeInMinutes = parseInt(hours) * 60 + parseInt(minutes);
 
-        setNextPrayer({
-          name: prayer.name,
-          time: prayer.time,
-          remaining: `${toBanglaNumber(hoursLeft)}ঘ ${toBanglaNumber(minutesLeft)}মি`,
-          hours: hoursLeft,
-          minutes: minutesLeft,
-          seconds: secondsLeft
-        });
-        return;
+      if (prayerTimeInMinutes > currentTimeInMinutes) {
+        nextPrayerInfo = prayer;
+        break;
       }
     }
 
     // If no prayer found today, next is Fajr tomorrow
-    const fajrTime = prayerTimes.fajr.start;
-    const [fajrHours, fajrMinutes] = fajrTime.split(':').map(Number);
-    const fajrTotalSeconds = (fajrHours * 60 + fajrMinutes) * 60;
-    const currentTotalSeconds = currentMinutes * 60 + currentSeconds;
-    const remainingSeconds = (24 * 3600) - currentTotalSeconds + fajrTotalSeconds;
-    
-    const hoursLeft = Math.floor(remainingSeconds / 3600);
-    const minutesLeft = Math.floor((remainingSeconds % 3600) / 60);
-    const secondsLeft = remainingSeconds % 60;
+    if (!nextPrayerInfo) {
+      nextPrayerInfo = prayersList[0];
+    }
+
+    // Calculate remaining time
+    const prayerTime24 = convertTo24Hour(nextPrayerInfo.time);
+    const [pHours, pMinutes] = prayerTime24.split(':');
+    let prayerTimeInMinutes = parseInt(pHours) * 60 + parseInt(pMinutes);
+
+    let diffMinutes = prayerTimeInMinutes - currentTimeInMinutes;
+    if (diffMinutes < 0) {
+      diffMinutes += 1440; // Add 24 hours
+    }
+
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+    const seconds = 60 - now.getSeconds();
 
     setNextPrayer({
-      name: 'ফজর',
-      time: fajrTime,
-      remaining: `${toBanglaNumber(hoursLeft)}ঘ ${toBanglaNumber(minutesLeft)}মি`,
-      hours: hoursLeft,
-      minutes: minutesLeft,
-      seconds: secondsLeft
+      name: nextPrayerInfo.name,
+      time: nextPrayerInfo.time,
+      remaining: `${hours}h ${minutes}m ${seconds}s`
     });
   };
 
-  const toBanglaNumber = (num) => {
-    const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    return num.toString().split('').map(digit => banglaDigits[parseInt(digit)] || digit).join('');
-  };
+  const calculateCurrentWaqt = () => {
+    const now = new Date();
+    const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const convertTo12Hour = (time24) => {
-    const [hours, minutes] = time24.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12;
-    return `${toBanglaNumber(hours12)}:${toBanglaNumber(minutes.toString().padStart(2, '0'))} ${period}`;
-  };
+    // Define waqt periods with start and end times
+    const waqtPeriods = [
+      { name: 'ফজর', start: prayerTimes.Fajr, end: prayerTimes.Sunrise },
+      { name: 'চাশত', start: prayerTimes.Sunrise, end: prayerTimes.Dhuhr },
+      { name: 'যোহর', start: prayerTimes.Dhuhr, end: prayerTimes.Asr },
+      { name: 'আসর', start: prayerTimes.Asr, end: prayerTimes.Maghrib },
+      { name: 'মাগরিব', start: prayerTimes.Maghrib, end: prayerTimes.Isha },
+      { name: 'এশা', start: prayerTimes.Isha, end: prayerTimes.Fajr } // Goes to next Fajr
+    ];
 
-  const getThemeColors = () => {
-    switch (theme) {
-      case 'dark':
-        return { bg: 'bg-gray-800', text: 'text-white', border: 'border-gray-700' };
-      case 'blue':
-        return { bg: 'bg-blue-800', text: 'text-white', border: 'border-blue-700' };
-      default:
-        return { bg: 'bg-white', text: 'text-black', border: 'border-black' };
+    let currentWaqtInfo = null;
+
+    for (const waqt of waqtPeriods) {
+      const startTime24 = convertTo24Hour(waqt.start);
+      const endTime24 = convertTo24Hour(waqt.end);
+      
+      const [startHours, startMinutes] = startTime24.split(':');
+      const [endHours, endMinutes] = endTime24.split(':');
+      
+      const startTimeInMinutes = parseInt(startHours) * 60 + parseInt(startMinutes);
+      let endTimeInMinutes = parseInt(endHours) * 60 + parseInt(endMinutes);
+      
+      // Handle midnight crossing for Isha to Fajr
+      if (endTimeInMinutes < startTimeInMinutes) {
+        if (currentTimeInMinutes >= startTimeInMinutes || currentTimeInMinutes < endTimeInMinutes) {
+          currentWaqtInfo = waqt;
+          break;
+        }
+      } else {
+        if (currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes < endTimeInMinutes) {
+          currentWaqtInfo = waqt;
+          break;
+        }
+      }
+    }
+
+    if (currentWaqtInfo) {
+      // Calculate remaining time until waqt ends
+      const endTime24 = convertTo24Hour(currentWaqtInfo.end);
+      const [endHours, endMinutes] = endTime24.split(':');
+      let endTimeInMinutes = parseInt(endHours) * 60 + parseInt(endMinutes);
+
+      let diffMinutes = endTimeInMinutes - currentTimeInMinutes;
+      if (diffMinutes < 0) {
+        diffMinutes += 1440; // Add 24 hours
+      }
+
+      const hours = Math.floor(diffMinutes / 60);
+      const minutes = diffMinutes % 60;
+      const seconds = 60 - now.getSeconds();
+
+      setCurrentWaqt({
+        name: currentWaqtInfo.name,
+        endTime: currentWaqtInfo.end,
+        remaining: `${hours}h ${minutes}m ${seconds}s`
+      });
     }
   };
 
-  const colors = getThemeColors();
+  const handleLocationSave = async () => {
+    try {
+      // Use geocoding API to get coordinates for any Bangladesh city
+      const geocodeResponse = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationInput)},Bangladesh&format=json&limit=1`
+      );
+      const geocodeData = await geocodeResponse.json();
+      
+      if (geocodeData && geocodeData.length > 0) {
+        const newLocation = {
+          city: locationInput,
+          country: 'বাংলাদেশ',
+          lat: parseFloat(geocodeData[0].lat),
+          lon: parseFloat(geocodeData[0].lon)
+        };
+        setLocation(newLocation);
+        setIsEditingLocation(false);
+      } else {
+        alert('শহর খুঁজে পাওয়া যায়নি। অনুগ্রহ করে সঠিক নাম লিখুন।');
+      }
+    } catch (error) {
+      console.error('Error finding location:', error);
+      alert('শহর খুঁজতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    }
+  };
 
+  // Prayer names in Bangla
   const prayerNames = {
-    fajr: 'ফজর',
-    dhuhr: 'জোহর',
-    asr: 'আসর',
-    maghrib: 'মাগরিব',
-    isha: 'এশা'
+    Fajr: 'ফজর',
+    Sunrise: 'সূর্যোদয়',
+    Dhuhr: 'যোহর',
+    Asr: 'আসর',
+    Maghrib: 'মাগরিব',
+    Isha: 'এশা'
+  };
+
+  // Prayer icons
+  const prayerIcons = {
+    Fajr: '🌅',
+    Sunrise: '☀️',
+    Dhuhr: '🌞',
+    Asr: '🌤️',
+    Maghrib: '🌆',
+    Isha: '🌙'
+  };
+
+  // Current Bangla date
+  const formatBanglaDate = () => {
+    const options = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    return currentTime.toLocaleDateString('bn-BD', options);
+  };
+
+  // Current time in 12-hour format
+  const formatCurrentTime = () => {
+    return currentTime.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
   };
 
   return (
-    <div id="prayer" className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-2xl overflow-hidden border-2 border-green-300">
-      {/* Header with Date and Time */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-3xl font-bold mb-2">১০ শাবান</h2>
-            <p className="text-green-100">শুক্রবার - ৩০ জানুয়ারি</p>
-            <p className="text-green-200 text-sm mt-1">১৬ মাঘ</p>
+    <div className="space-y-6">
+      {/* Header Card with Current Time */}
+      <div className="bg-gradient-to-r from-green-500 to-teal-600 rounded-xl shadow-2xl p-6 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <FaMosque className="text-4xl" />
+              <div>
+                <h2 className="text-2xl font-bold">১০ শাবান</h2>
+                <p className="text-sm opacity-90">১৬ মাঘ ১৪৩২</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <FaSun className="text-5xl animate-pulse mb-2" />
+              <div className="text-sm font-semibold">
+                <div>🌅 সূর্যোদয়: {prayerTimes.Sunrise}</div>
+                <div>🌆 সূর্যাস্ত: {prayerTimes.Maghrib}</div>
+              </div>
+            </div>
           </div>
-          <div className="text-right">
-            <FaSun className="text-yellow-300 text-5xl mb-2 inline-block" />
-            <p className="text-4xl font-bold">{toBanglaNumber(currentTime.getHours())}:{toBanglaNumber(currentTime.getMinutes().toString().padStart(2, '0'))}:{toBanglaNumber(currentTime.getSeconds().toString().padStart(2, '0'))}</p>
-            <p className="text-sm mt-1 text-green-200">সূর্যোদয় {convertTo12Hour(prayerTimes.sunrise)} | সূর্যাস্ত {convertTo12Hour(prayerTimes.sunset)}</p>
+
+          <div className="text-center bg-white bg-opacity-20 rounded-lg p-4 backdrop-blur-sm">
+            <p className="text-sm opacity-90 mb-1">{formatBanglaDate()}</p>
+            <div className="text-5xl font-bold tracking-wider">{formatCurrentTime()}</div>
           </div>
         </div>
       </div>
 
-      {loading && (
-        <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-          <p className="text-sm text-gray-700 mt-2">লোড হচ্ছে...</p>
-        </div>
-      )}
-
-      <div className="flex gap-6 p-6">
-        {/* Circular Timer */}
-        <div className="flex-shrink-0">
-          <div className="text-center mb-4">
-            <h3 className="text-2xl font-bold text-blue-900 mb-1">সালাতুদ দূহা</h3>
-            <p className="text-sm text-gray-600">ওয়াক্ত শেষ হতে বাকি</p>
-          </div>
-          <div className="relative w-48 h-48">
-            <svg className="w-full h-full transform -rotate-90">
-              <circle
-                cx="96"
-                cy="96"
-                r="88"
-                stroke="#e5e7eb"
-                strokeWidth="12"
-                fill="none"
-              />
-              <circle
-                cx="96"
-                cy="96"
-                r="88"
-                stroke="#10b981"
-                strokeWidth="12"
-                fill="none"
-                strokeDasharray="553"
-                strokeDashoffset="138"
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold text-gray-800">
-                {toBanglaNumber(nextPrayer.hours)}:{toBanglaNumber(nextPrayer.minutes.toString().padStart(2, '0'))}:{toBanglaNumber(nextPrayer.seconds.toString().padStart(2, '0'))}
-              </span>
-              <span className="text-xs text-gray-600 mt-1">ঘ:মি:সে</span>
+      {/* Current Waqt and Next Prayer - Side by Side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Current Waqt Card */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="text-center">
+            <h3 className="text-gray-600 text-lg mb-2">বর্তমান ওয়াক্ত</h3>
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <FaClock className="text-4xl text-blue-600" />
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800">{currentWaqt.name}</h2>
+                <p className="text-blue-600 font-semibold">শেষ {currentWaqt.endTime}</p>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">ওয়াক্ত শেষ হওয়ার বাকি</p>
+              <div className="flex items-center justify-center gap-2">
+                <FaClock className="text-blue-600" />
+                <span className="text-2xl font-bold text-blue-700">{currentWaqt.remaining}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Prayer Times List */}
-        <div className="flex-1 space-y-2">
-          {/* Fajr */}
-          <div className={`flex justify-between items-center p-4 rounded-xl transition-all border-2 ${
-            nextPrayer.name === 'ফজর'
-              ? 'bg-red-50 border-red-500 shadow-md'
-              : 'bg-white border-gray-200 hover:border-green-300'
-          }`}>
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-bold text-gray-800">ফজর</span>
-              {nextPrayer.name === 'ফজর' && (
-                <button 
-                  className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full cursor-pointer hover:bg-red-600 transition"
-                  title="পরবর্তী নামাজ"
-                >
-                  <span className="text-white text-xs">ⓘ</span>
-                </button>
-              )}
-            </div>
-            <div className="text-right">
-              <span className="text-2xl font-bold text-gray-800">{convertTo12Hour(prayerTimes.fajr.start)}</span>
-              <p className="text-xs text-gray-500 mt-1">(শেষ {convertTo12Hour(prayerTimes.fajr.end)})</p>
-            </div>
-          </div>
-
-          {/* Dhuhr/Johor */}
-          <div className={`flex justify-between items-center p-4 rounded-xl transition-all border-2 ${
-            nextPrayer.name === 'জোহর'
-              ? 'bg-red-50 border-red-500 shadow-md'
-              : 'bg-white border-gray-200 hover:border-green-300'
-          }`}>
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-bold text-gray-800">জোহর</span>
-              {nextPrayer.name === 'জোহর' && (
-                <button 
-                  className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full cursor-pointer hover:bg-red-600 transition"
-                  title="পরবর্তী নামাজ"
-                >
-                  <span className="text-white text-xs">ⓘ</span>
-                </button>
-              )}
-            </div>
-            <div className="text-right">
-              <span className="text-2xl font-bold text-gray-800">{convertTo12Hour(prayerTimes.dhuhr.start)}</span>
-              <p className="text-xs text-gray-500 mt-1">(শেষ {convertTo12Hour(prayerTimes.dhuhr.end)})</p>
-            </div>
-          </div>
-
-          {/* Asr */}
-          <div className={`flex justify-between items-center p-4 rounded-xl transition-all border-2 relative group ${
-            nextPrayer.name === 'আসর'
-              ? 'bg-red-50 border-red-500 shadow-md'
-              : 'bg-white border-gray-200 hover:border-green-300'
-          }`}>
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-bold text-gray-800">আসর</span>
-              <div className="relative">
-                <button 
-                  className="flex items-center justify-center w-6 h-6 bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 transition"
-                >
-                  <span className="text-white text-xs">ⓘ</span>
-                </button>
-                <div className="absolute left-8 top-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  মাকরূহ ওয়াক্ত: সূর্যাস্তের আগে
-                </div>
+        {/* Next Prayer Card */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="text-center">
+            <h3 className="text-gray-600 text-lg mb-2">পরবর্তী নামাজ</h3>
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <FaMosque className="text-4xl text-green-600" />
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800">{nextPrayer.name}</h2>
+                <p className="text-green-600 font-semibold">{nextPrayer.time}</p>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-2xl font-bold text-gray-800">{convertTo12Hour(prayerTimes.asr.start)}</span>
-              <p className="text-xs text-gray-500 mt-1">(শেষ {convertTo12Hour(prayerTimes.asr.end)})</p>
-            </div>
-          </div>
-
-          {/* Maghrib */}
-          <div className={`flex justify-between items-center p-4 rounded-xl transition-all border-2 relative group ${
-            nextPrayer.name === 'মাগরিব'
-              ? 'bg-green-50 border-green-500 shadow-md'
-              : 'bg-white border-gray-200 hover:border-green-300'
-          }`}>
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-bold text-gray-800">মাগরিব</span>
-              <div className="relative">
-                <button 
-                  className="flex items-center justify-center w-6 h-6 bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 transition"
-                >
-                  <span className="text-white text-xs">ⓘ</span>
-                </button>
-                <div className="absolute left-8 top-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  দ্রুত পড়ুন: ওয়াক্ত অল্প সময়ের
-                </div>
+            
+            <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">ওয়াক্ত শুরু হওয়ার বাকি</p>
+              <div className="flex items-center justify-center gap-2">
+                <FaClock className="text-green-600" />
+                <span className="text-2xl font-bold text-green-700">{nextPrayer.remaining}</span>
               </div>
-            </div>
-            <div className="text-right">
-              <span className="text-2xl font-bold text-gray-800">{convertTo12Hour(prayerTimes.maghrib.start)}</span>
-              <p className="text-xs text-gray-500 mt-1">(শেষ {convertTo12Hour(prayerTimes.maghrib.end)})</p>
-            </div>
-          </div>
-
-          {/* Isha */}
-          <div className={`flex justify-between items-center p-4 rounded-xl transition-all border-2 ${
-            nextPrayer.name === 'এশা'
-              ? 'bg-red-50 border-red-500 shadow-md'
-              : 'bg-white border-gray-200 hover:border-green-300'
-          }`}>
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-bold text-gray-800">এশা</span>
-              {nextPrayer.name === 'এশা' && (
-                <button 
-                  className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full cursor-pointer hover:bg-red-600 transition"
-                  title="পরবর্তী নামাজ"
-                >
-                  <span className="text-white text-xs">ⓘ</span>
-                </button>
-              )}
-            </div>
-            <div className="text-right">
-              <span className="text-2xl font-bold text-gray-800">{convertTo12Hour(prayerTimes.isha.start)}</span>
-              <p className="text-xs text-gray-500 mt-1">মধ্যরাত {convertTo12Hour(prayerTimes.isha.end)}</p>
-            </div>
-          </div>
-          
-          {/* Seheri & Iftar Times */}
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="bg-purple-50 border-2 border-purple-300 p-3 rounded-xl">
-              <div className="flex items-center gap-2 mb-1">
-                <FaMoon className="text-purple-600" />
-                <span className="font-bold text-purple-900">সেহরি</span>
-              </div>
-              <span className="text-xl font-bold text-purple-800">{convertTo12Hour(specialTimes.seheri)}</span>
-            </div>
-            <div className="bg-orange-50 border-2 border-orange-300 p-3 rounded-xl">
-              <div className="flex items-center gap-2 mb-1">
-                <FaUtensils className="text-orange-600" />
-                <span className="font-bold text-orange-900">ইফতার</span>
-              </div>
-              <span className="text-xl font-bold text-orange-800">{convertTo12Hour(specialTimes.iftar)}</span>
-            </div>
-          </div>
-
-          {/* Forbidden Times */}
-          <div className="mt-4 bg-yellow-50 border-2 border-yellow-400 p-4 rounded-xl">
-            <h4 className="font-bold text-yellow-900 mb-2 flex items-center gap-2">
-              <span className="text-lg">⚠️</span>
-              নামাজের নিষিদ্ধ সময়
-            </h4>
-            <div className="space-y-1">
-              {forbiddenTimes.map((time, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span className="text-yellow-800">{time.name}</span>
-                  <span className="font-semibold text-yellow-900">{convertTo12Hour(time.start)} - {convertTo12Hour(time.end)}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Location Section */}
-      <div className="p-6 pt-0">
-        <div className="bg-white border-2 border-gray-300 p-4 rounded-xl">
-          {editingLocation ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <FaMapMarkerAlt className="text-red-600" />
-                <span className="font-semibold text-gray-800">অবস্থান পরিবর্তন করুন:</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+      {/* Location */}
+      <div className="bg-white rounded-xl shadow-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1">
+            <FaMapMarkerAlt className="text-red-500 text-xl" />
+            {isEditingLocation ? (
+              <div className="flex items-center gap-2 flex-1">
                 <input
                   type="text"
-                  value={locationForm.city}
-                  onChange={(e) => setLocationForm({...locationForm, city: e.target.value})}
-                  placeholder="শহর (যেমন: ঢাকা)"
-                  className="p-2 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:outline-none text-gray-800"
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  placeholder="শহরের নাম লিখুন (যেমন: ঢাকা, চট্টগ্রাম, সিলেট)"
+                  className="border-2 border-green-500 rounded-lg px-4 py-2 text-base focus:border-green-600 focus:outline-none flex-1 font-semibold"
                 />
-                <input
-                  type="text"
-                  value={locationForm.district}
-                  onChange={(e) => setLocationForm({...locationForm, district: e.target.value})}
-                  placeholder="জেলা (যেমন: ঢাকা)"
-                  className="p-2 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:outline-none text-gray-800"
-                />
-                <input
-                  type="text"
-                  value={locationForm.upazila}
-                  onChange={(e) => setLocationForm({...locationForm, upazila: e.target.value})}
-                  placeholder="উপজেলা (ঐচ্ছিক)"
-                  className="p-2 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:outline-none text-gray-800"
-                />
-                <input
-                  type="text"
-                  value={locationForm.country}
-                  onChange={(e) => setLocationForm({...locationForm, country: e.target.value})}
-                  placeholder="দেশ (যেমন: বাংলাদেশ)"
-                  className="p-2 border-2 border-gray-300 rounded-lg focus:border-red-600 focus:outline-none text-gray-800"
-                />
-              </div>
-              <div className="flex gap-2">
                 <button
-                  onClick={handleLocationUpdate}
-                  disabled={loading}
-                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  onClick={handleLocationSave}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                 >
-                  <FaSave size={14} />
-                  সংরক্ষণ করুন
-                </button>
-                <button
-                  onClick={() => {
-                    setEditingLocation(false);
-                    setNewCity('');
-                  }}
-                  className="flex-1 bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition-all"
-                >
-                  বাতিল
+                  <FaSave /> সংরক্ষণ
                 </button>
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <p className="text-sm flex items-center gap-2 flex-wrap">
-                <FaMapMarkerAlt className="text-red-600" />
-                <span className="font-semibold text-gray-800">অবস্থান:</span>
-                <span className="text-gray-700">
-                  {[location.upazila, location.district || location.city, location.country].filter(Boolean).join(', ')}
-                </span>
-              </p>
-              <button
-                onClick={() => {
-                  setEditingLocation(true);
-                  setLocationForm({
-                    city: location.city,
-                    district: location.district || location.city,
-                    upazila: location.upazila || '',
-                    country: location.country
-                  });
-                }}
-                className="text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
-              >
-                <FaEdit size={14} />
-                <span className="text-sm">পরিবর্তন</span>
-              </button>
-            </div>
+            ) : (
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">{location.city}</h3>
+                <p className="text-sm text-gray-600">{location.country}</p>
+              </div>
+            )}
+          </div>
+          {!isEditingLocation && (
+            <button
+              onClick={() => {
+                setIsEditingLocation(true);
+                setLocationInput(location.city);
+              }}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+            >
+              <FaEdit className="text-lg" /> পরিবর্তন করুন
+            </button>
           )}
+        </div>
+      </div>
+
+      {/* Prayer Times List */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-green-600 to-teal-600 p-4">
+          <h3 className="text-white text-xl font-bold text-center">
+            আজকের নামাজের সময়সূচী
+          </h3>
+        </div>
+
+        <div className="divide-y divide-gray-200">
+          {Object.keys(prayerTimes).map((prayer, index) => (
+            <div
+              key={prayer}
+              className={`p-4 flex items-center justify-between hover:bg-gray-50 transition-colors ${
+                nextPrayer.time === prayerTimes[prayer] ? 'bg-green-50' : ''
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <span className="text-3xl">{prayerIcons[prayer]}</span>
+                <div>
+                  <h4 className="font-bold text-gray-800 text-lg">
+                    {prayerNames[prayer]}
+                  </h4>
+                  {prayer === 'Sunrise' && (
+                    <p className="text-xs text-gray-500">(নামাজ নেই, শুধু সময়)</p>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-bold text-green-700">
+                  {prayerTimes[prayer]}
+                </p>
+                {nextPrayer.time === prayerTimes[prayer] && (
+                  <span className="text-xs text-green-600 font-semibold">
+                    • পরবর্তী
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Special Times (Seheri & Iftar) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center gap-3 mb-2">
+            <FaMoon className="text-3xl" />
+            <h4 className="text-xl font-bold">সেহরির শেষ সময়</h4>
+          </div>
+          <p className="text-3xl font-bold">{seheriTime}</p>
+          <p className="text-sm opacity-90 mt-1">ফজরের ১০ মিনিট আগে</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center gap-3 mb-2">
+            <FaUtensils className="text-3xl" />
+            <h4 className="text-xl font-bold">ইফতারের সময়</h4>
+          </div>
+          <p className="text-3xl font-bold">{iftarTime}</p>
+          <p className="text-sm opacity-90 mt-1">মাগরিবের শুরুতে</p>
+        </div>
+      </div>
+
+      {/* Forbidden Times */}
+      <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-xl">⚠️</span>
+          </div>
+          <h3 className="text-xl font-bold text-red-700">
+            যে সময় নামাজ পড়া নিষেধ
+          </h3>
+        </div>
+
+        <div className="space-y-3">
+          <div className="bg-white rounded-lg p-4 border border-red-200">
+            <p className="font-semibold text-gray-800">১. সূর্যোদয়ের সময়</p>
+            <p className="text-sm text-gray-600">সূর্য উদিত হওয়া থেকে ২০ মিনিট পর্যন্ত</p>
+          </div>
+          <div className="bg-white rounded-lg p-4 border border-red-200">
+            <p className="font-semibold text-gray-800">২. দুপুরে সূর্য মাথার উপরে</p>
+            <p className="text-sm text-gray-600">যোহরের ওয়াক্ত শুরুর ঠিক আগে</p>
+          </div>
+          <div className="bg-white rounded-lg p-4 border border-red-200">
+            <p className="font-semibold text-gray-800">৩. সূর্যাস্তের সময়</p>
+            <p className="text-sm text-gray-600">সূর্য ডুবতে শুরু করা থেকে সম্পূর্ণ ডুবা পর্যন্ত</p>
+          </div>
         </div>
       </div>
     </div>

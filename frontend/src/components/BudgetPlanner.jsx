@@ -23,7 +23,7 @@ const BudgetPlanner = () => {
 
   const getAIBudgetRecommendation = async () => {
     if (!income || parseFloat(income) <= 0) {
-      alert('Please enter a valid income amount');
+      alert('সঠিক আয়ের পরিমাণ লিখুন');
       return;
     }
 
@@ -38,7 +38,8 @@ const BudgetPlanner = () => {
       setAiRecommendation(response.data);
     } catch (error) {
       console.error('Error getting budget recommendation:', error);
-      alert('Failed to get recommendation');
+      const errorMsg = error.response?.data?.message || error.message || 'Network Error';
+      alert(`বাজেট সুপারিশ পেতে সমস্যা হয়েছে!\nError: ${errorMsg}\nব্যাকএন্ড সার্ভার চালু আছে কিনা চেক করুন।`);
     } finally {
       setLoading(false);
     }

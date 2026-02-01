@@ -3,6 +3,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 import io
+import base64
 from datetime import datetime
 from database import Database
 from ai_advisor import AIAdvisor
@@ -330,6 +331,73 @@ def create_routine():
             'success': False,
             'message': str(e)
         }), 400
+
+# New routine endpoints for RoutineSetup component
+@app.route('/api/routines', methods=['GET', 'POST'])
+def manage_routines():
+    """Get all routines for a user or create a new routine"""
+    try:
+        if request.method == 'GET':
+            user_id = request.args.get('userId')
+            if not user_id:
+                return jsonify({'success': False, 'message': 'User ID required'}), 400
+            
+            routines = db.get_user_routines(user_id)
+            return jsonify(routines)
+        
+        elif request.method == 'POST':
+            data = request.json
+            user_id = data.get('userId')
+            if not user_id:
+                return jsonify({'success': False, 'message': 'User ID required'}), 400
+            
+            routine_data = {
+                'user_id': user_id,
+                'name': data.get('name'),
+                'type': data.get('type'),
+                'schedule': data.get('schedule', []),
+                'createdAt': data.get('createdAt', datetime.now().isoformat())
+            }
+            
+            routine_id = db.save_routine(routine_data)
+            routine_data['_id'] = str(routine_id)
+            
+            return jsonify(routine_data), 201
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/routines/<routine_id>', methods=['GET', 'PUT', 'DELETE'])
+def manage_routine(routine_id):
+    """Get, update or delete a specific routine"""
+    try:
+        if request.method == 'DELETE':
+            # Delete routine
+            from bson import ObjectId
+            db.routines.delete_one({'_id': ObjectId(routine_id)})
+            return jsonify({'success': True, 'message': 'Routine deleted'})
+        
+        elif request.method == 'GET':
+            # Get specific routine
+            from bson import ObjectId
+            routine = db.routines.find_one({'_id': ObjectId(routine_id)})
+            if routine:
+                routine['_id'] = str(routine['_id'])
+                return jsonify(routine)
+            return jsonify({'success': False, 'message': 'Routine not found'}), 404
+        
+        elif request.method == 'PUT':
+            # Update routine
+            from bson import ObjectId
+            data = request.json
+            db.routines.update_one(
+                {'_id': ObjectId(routine_id)},
+                {'$set': data}
+            )
+            return jsonify({'success': True, 'message': 'Routine updated'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/financial/analysis', methods=['GET'])
 def financial_analysis():
@@ -1430,6 +1498,1044 @@ def get_prayer_times():
             'message': str(e)
         }), 500
 
+# ============================================
+# HEALTH SYSTEM ENDPOINTS
+# ============================================
+
+# In-memory storage for health data (temporary - will be replaced with DB)
+health_profiles_store = []
+health_products_store = []
+
+@app.route('/api/health/profile', methods=['GET'])
+def get_health_profile():
+    """Get user's health profile"""
+    try:
+        user_id = request.args.get('user_id', 'demo_user')
+        
+        # Get from in-memory store (or database)
+        profile = next((p for p in health_profiles_store if p.get('user_id') == user_id), None)
+        
+        if not profile:
+            # Return default profile
+            return jsonify({
+                'success': True,
+                'data': {
+                    'bloodPressure': {'systolic': 120, 'diastolic': 80},
+                    'heartRate': 72,
+                    'weight': 70,
+                    'height': 170,
+                    'bloodSugar': 95,
+                    'temperature': 98.6,
+                    'sleep': 7,
+                    'waterIntake': 2.5,
+                    'steps': 8000
+                },
+                'history': [],
+                'conditions': [],
+                'medications': []
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': profile.get('data', {}),
+            'history': profile.get('history', []),
+            'conditions': profile.get('conditions', []),
+            'medications': profile.get('medications', [])
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/health/update', methods=['POST'])
+def update_health_profile():
+    """Update health profile"""
+    try:
+        data = request.json
+        user_id = data.get('user_id', 'demo_user')
+        
+        # Create health record
+        health_record = {
+            'user_id': user_id,
+            'data': {
+                'bloodPressure': data.get('bloodPressure', {'systolic': 120, 'diastolic': 80}),
+                'heartRate': data.get('heartRate', 72),
+                'weight': data.get('weight', 70),
+                'height': data.get('height', 170),
+                'bloodSugar': data.get('bloodSugar', 95),
+                'temperature': data.get('temperature', 98.6),
+                'sleep': data.get('sleep', 7),
+                'waterIntake': data.get('waterIntake', 2.5),
+                'steps': data.get('steps', 8000)
+            },
+            'timestamp': data.get('timestamp', datetime.now().isoformat()),
+            'conditions': data.get('conditions', []),
+            'medications': data.get('medications', [])
+        }
+        
+        # Find existing profile
+        existing_idx = next((i for i, p in enumerate(health_profiles_store) if p.get('user_id') == user_id), None)
+        
+        if existing_idx is not None:
+            # Update existing
+            health_profiles_store[existing_idx] = health_record
+        else:
+            # Add new
+            health_profiles_store.append(health_record)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Health profile updated successfully'
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/health/ai-suggestions', methods=['POST'])
+def get_health_ai_suggestions():
+    """Get AI health suggestions based on user's health data"""
+    try:
+        data = request.json
+        health_data = data.get('healthData', {})
+        conditions = data.get('conditions', [])
+        
+        suggestions = []
+        
+        # BMI check
+        height_m = health_data.get('height', 170) / 100
+        weight = health_data.get('weight', 70)
+        bmi = weight / (height_m * height_m)
+        
+        if bmi < 18.5:
+            suggestions.append('⚠️ আপনার BMI কম। পুষ্টিকর খাবার বেশি খান।')
+        elif bmi >= 25 and bmi < 30:
+            suggestions.append('⚠️ আপনার ওজন বেশি। নিয়মিত ব্যায়াম করুন এবং স্বাস্থ্যকর খাবার খান।')
+        elif bmi >= 30:
+            suggestions.append('🚨 আপনার ওজন অনেক বেশি। ডাক্তারের পরামর্শ নিন।')
+        else:
+            suggestions.append('✅ আপনার BMI স্বাভাবিক। এভাবে চালিয়ে যান!')
+        
+        # Blood Pressure check
+        bp = health_data.get('bloodPressure', {})
+        systolic = bp.get('systolic', 120)
+        diastolic = bp.get('diastolic', 80)
+        
+        if systolic >= 140 or diastolic >= 90:
+            suggestions.append('🚨 রক্তচাপ বেশি! লবণ কম খান এবং ডাক্তারের পরামর্শ নিন।')
+        elif systolic >= 130 or diastolic >= 80:
+            suggestions.append('⚠️ রক্তচাপ একটু বেশি। স্ট্রেস কমান এবং ব্যায়াম করুন।')
+        else:
+            suggestions.append('✅ রক্তচাপ স্বাভাবিক')
+        
+        # Blood Sugar check
+        blood_sugar = health_data.get('bloodSugar', 95)
+        if blood_sugar >= 126:
+            suggestions.append('🚨 রক্তে শর্করা অনেক বেশি! অবিলম্বে ডাক্তারের পরামর্শ নিন।')
+        elif blood_sugar >= 100:
+            suggestions.append('⚠️ রক্তে শর্করা একটু বেশি। মিষ্টি কম খান।')
+        else:
+            suggestions.append('✅ রক্তে শর্করা স্বাভাবিক')
+        
+        # Sleep check
+        sleep = health_data.get('sleep', 7)
+        if sleep < 6:
+            suggestions.append('😴 আপনার ঘুম কম হচ্ছে। প্রতিদিন ৭-৮ ঘন্টা ঘুমান।')
+        elif sleep > 9:
+            suggestions.append('😴 আপনি বেশি ঘুমাচ্ছেন। পরিমিত ঘুম স্বাস্থ্যকর।')
+        else:
+            suggestions.append('✅ ঘুম পর্যাপ্ত')
+        
+        # Water intake check
+        water = health_data.get('waterIntake', 2.5)
+        if water < 2:
+            suggestions.append('💧 পানি পান কম হচ্ছে। দিনে কমপক্ষে ৮ গ্লাস পানি পান করুন।')
+        else:
+            suggestions.append('✅ পানি পান পর্যাপ্ত')
+        
+        # General suggestions
+        suggestions.extend([
+            '🥗 তাজা ফল এবং সবজি বেশি খান',
+            '🏃 দিনে ৩০ মিনিট হাঁটুন',
+            '🧘 মানসিক চাপ কমানোর জন্য ধ্যান করুন',
+            '🚭 ধূমপান এড়িয়ে চলুন'
+        ])
+        
+        return jsonify({
+            'success': True,
+            'suggestions': suggestions
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/health/products', methods=['GET'])
+def get_health_products():
+    """Get all health products"""
+    try:
+        user_id = request.args.get('user_id', 'demo_user')
+        
+        # Filter products by user
+        user_products = [p for p in health_products_store if p.get('user_id', 'demo_user') == user_id]
+        
+        return jsonify({
+            'success': True,
+            'products': user_products
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/health/product', methods=['POST'])
+def add_health_product():
+    """Add a health product"""
+    try:
+        data = request.json
+        user_id = data.get('user_id', 'demo_user')
+        
+        product = {
+            'id': data.get('id', f"PRD{int(datetime.now().timestamp() * 1000)}"),
+            'user_id': user_id,
+            'name': data.get('name'),
+            'category': data.get('category'),
+            'price': float(data.get('price', 0)),
+            'purchaseDate': data.get('purchaseDate'),
+            'image': data.get('image'),
+            'description': data.get('description', ''),
+            'brand': data.get('brand', ''),
+            'quantity': int(data.get('quantity', 1)),
+            'unit': data.get('unit', 'piece'),
+            'aiRecommendation': data.get('aiRecommendation', {}),
+            'createdAt': data.get('createdAt', datetime.now().isoformat())
+        }
+        
+        health_products_store.append(product)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Product added successfully',
+            'product': product
+        }), 201
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/health/product/<product_id>', methods=['DELETE'])
+def delete_health_product(product_id):
+    """Delete a health product"""
+    try:
+        global health_products_store
+        
+        health_products_store = [p for p in health_products_store if p.get('id') != product_id]
+        
+        return jsonify({
+            'success': True,
+            'message': 'Product deleted successfully'
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/health/product-recommendation', methods=['POST'])
+def get_product_recommendation():
+    """Get AI recommendation for a product based on health conditions"""
+    try:
+        data = request.json
+        product = data.get('product', {})
+        health_conditions = data.get('healthConditions', [])
+        
+        category = product.get('category', '')
+        product_name = product.get('name', '').lower()
+        
+        recommendation = {
+            'suitable': 'neutral',
+            'message': 'ℹ️ সাধারণ পণ্য',
+            'tips': ['গুণমান পরীক্ষা করুন', 'মেয়াদ চেক করুন']
+        }
+        
+        # Medicine/Supplement recommendations
+        if category in ['Medicine', 'Supplement']:
+            if any('diabetes' in str(c).lower() for c in health_conditions):
+                recommendation = {
+                    'suitable': 'warning',
+                    'message': '⚠️ ডায়াবেটিস রোগীদের জন্য ডাক্তারের পরামর্শ আবশ্যক',
+                    'tips': ['ডাক্তারের পরামর্শ ছাড়া খাবেন না', 'রক্তে শর্করা নিয়মিত পরীক্ষা করুন']
+                }
+            elif any('pressure' in str(c).lower() or 'hypertension' in str(c).lower() for c in health_conditions):
+                recommendation = {
+                    'suitable': 'warning',
+                    'message': '⚠️ উচ্চ রক্তচাপ রোগীদের সতর্কতা',
+                    'tips': ['ডাক্তারের নির্দেশ মেনে চলুন', 'লবণ কম খান']
+                }
+            else:
+                recommendation = {
+                    'suitable': 'warning',
+                    'message': '⚠️ ওষুধ সেবনে সতর্কতা',
+                    'tips': ['নির্ধারিত ডোজ মেনে চলুন', 'পার্শ্বপ্রতিক্রিয়া দেখা দিলে ডাক্তারকে জানান']
+                }
+        
+        # Food recommendations
+        elif category == 'Food':
+            if 'sugar' in product_name or 'sweet' in product_name or 'candy' in product_name:
+                if any('diabetes' in str(c).lower() for c in health_conditions):
+                    recommendation = {
+                        'suitable': 'bad',
+                        'message': '❌ ডায়াবেটিস রোগীদের জন্য উপযুক্ত নয়',
+                        'tips': ['চিনিযুক্ত খাবার এড়িয়ে চলুন', 'শর্করামুক্ত বিকল্প খুঁজুন']
+                    }
+                else:
+                    recommendation = {
+                        'suitable': 'warning',
+                        'message': '⚠️ পরিমিত পরিমাণে খান',
+                        'tips': ['অতিরিক্ত মিষ্টি স্বাস্থ্যের জন্য ক্ষতিকর']
+                    }
+            elif any(word in product_name for word in ['fruit', 'vegetable', 'salad', 'ফল', 'সবজি']):
+                recommendation = {
+                    'suitable': 'good',
+                    'message': '✅ স্বাস্থ্যকর খাবার',
+                    'tips': ['প্রতিদিন খান', 'তাজা থাকতে ফ্রিজে রাখুন']
+                }
+            else:
+                recommendation = {
+                    'suitable': 'neutral',
+                    'message': 'ℹ️ পুষ্টি মান দেখে খান',
+                    'tips': ['পরিমিত পরিমাণে খান', 'মেয়াদ চেক করুন']
+                }
+        
+        return jsonify({
+            'success': True,
+            'recommendation': recommendation
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+# ============= GALLERY & DOCUMENTS API =============
+
+gallery_items_store = []
+
+@app.route('/api/gallery/items', methods=['GET'])
+def get_gallery_items():
+    """Get all gallery items (photos and documents)"""
+    try:
+        photos = [item for item in gallery_items_store if item.get('type') == 'photo']
+        documents = [item for item in gallery_items_store if item.get('type') == 'document']
+        
+        return jsonify({
+            'success': True,
+            'photos': photos,
+            'documents': documents
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/gallery/item', methods=['POST'])
+def add_gallery_item():
+    """Add a new photo or document"""
+    try:
+        data = request.json
+        gallery_items_store.append(data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Item added successfully'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/gallery/item/<item_id>', methods=['DELETE'])
+def delete_gallery_item(item_id):
+    """Delete a gallery item"""
+    try:
+        global gallery_items_store
+        gallery_items_store = [item for item in gallery_items_store if item.get('id') != item_id]
+        
+        return jsonify({
+            'success': True,
+            'message': 'Item deleted successfully'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+# ============= EVENTS & REMINDERS API =============
+
+events_store = []
+
+@app.route('/api/events/all', methods=['GET'])
+def get_all_events():
+    """Get all events"""
+    try:
+        return jsonify({
+            'success': True,
+            'events': events_store
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/events/add', methods=['POST'])
+def add_event():
+    """Add a new event"""
+    try:
+        data = request.json
+        events_store.append(data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Event added successfully'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/events/<event_id>', methods=['PUT'])
+def update_event(event_id):
+    """Update an event"""
+    try:
+        data = request.json
+        for i, event in enumerate(events_store):
+            if event.get('id') == event_id:
+                events_store[i] = data
+                break
+        
+        return jsonify({
+            'success': True,
+            'message': 'Event updated successfully'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/events/<event_id>', methods=['DELETE'])
+def delete_event(event_id):
+    """Delete an event"""
+    try:
+        global events_store
+        events_store = [event for event in events_store if event.get('id') != event_id]
+        
+        return jsonify({
+            'success': True,
+            'message': 'Event deleted successfully'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+# ============= REPORTS API =============
+
+@app.route('/api/reports/generate', methods=['POST'])
+def generate_report():
+    """Generate reports based on type and date range"""
+    try:
+        data = request.json
+        report_type = data.get('type', 'overall')
+        date_range = data.get('dateRange', 'month')
+        
+        # This is a placeholder - in production, you'd fetch real data from database
+        report = {
+            'type': report_type,
+            'dateRange': date_range,
+            'generatedAt': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'report': report
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+# ============= AI ASSISTANT API =============
+
+@app.route('/api/ai/voice-command', methods=['POST'])
+def process_voice_command():
+    """Process voice commands"""
+    try:
+        data = request.json
+        command = data.get('command', '').lower()
+        
+        # Simple command processing
+        response_data = {
+            'success': True,
+            'response': 'Command processed',
+            'action': 'unknown',
+            'params': {}
+        }
+        
+        if 'expense' in command or 'খরচ' in command:
+            response_data['response'] = 'Opening expense tracker...'
+            response_data['action'] = 'navigate'
+            response_data['params'] = {'path': '/financial'}
+        elif 'health' in command or 'স্বাস্থ্য' in command:
+            response_data['response'] = 'Opening health dashboard...'
+            response_data['action'] = 'navigate'
+            response_data['params'] = {'path': '/health'}
+        elif 'prayer' in command or 'নামাজ' in command:
+            response_data['response'] = 'Opening prayer times...'
+            response_data['action'] = 'navigate'
+            response_data['params'] = {'path': '/prayer'}
+        elif 'report' in command or 'রিপোর্ট' in command:
+            response_data['response'] = 'Opening report generator...'
+            response_data['action'] = 'navigate'
+            response_data['params'] = {'path': '/reports'}
+        
+        return jsonify(response_data)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/ai/insights', methods=['GET'])
+def get_ai_insights():
+    """Get AI-generated insights"""
+    try:
+        # This would be generated from actual data analysis in production
+        insights_data = {
+            'success': True,
+            'suggestions': [],
+            'insights': [],
+            'predictions': []
+        }
+        
+        return jsonify(insights_data)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/ai/auto-categorize', methods=['POST'])
+def auto_categorize_expenses():
+    """Auto-categorize expenses using AI"""
+    try:
+        data = request.json
+        expenses = data.get('expenses', [])
+        
+        # Simple categorization logic (in production, use ML model)
+        categorized_count = 0
+        for expense in expenses:
+            # Add categorization logic here
+            categorized_count += 1
+        
+        return jsonify({
+            'success': True,
+            'categorizedCount': categorized_count,
+            'message': f'{categorized_count} expenses categorized'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+# ===================== HEALTH RECORDS ENDPOINTS =====================
+
+@app.route('/api/health/profile', methods=['GET'])
+def get_health_profile():
+    """Get user's latest health profile"""
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        latest_record = db.get_latest_health_record(user_id)
+        history = db.get_health_records(user_id, limit=30)
+        
+        return jsonify({
+            'success': True,
+            'data': latest_record,
+            'history': history
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/health/update', methods=['POST'])
+def update_health_record():
+    """Save new health record"""
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        record_id = db.save_health_record(user_id, data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Health record saved',
+            'record_id': str(record_id)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/health/ai-suggestions', methods=['POST'])
+def get_health_ai_suggestions():
+    """Get personalized AI health suggestions"""
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        health_data = data.get('healthData', {})
+        conditions = data.get('conditions', [])
+        
+        suggestions = []
+        
+        # BMI-based suggestions
+        if health_data.get('weight') and health_data.get('height'):
+            height_m = health_data['height'] / 100
+            bmi = health_data['weight'] / (height_m * height_m)
+            
+            if bmi < 18.5:
+                suggestions.append('⚠️ আপনার BMI কম। পুষ্টিকর খাবার বেশি খান।')
+            elif bmi >= 25:
+                suggestions.append('⚠️ ওজন নিয়ন্ত্রণে রাখুন। দিনে ৪৫ মিনিট ব্যায়াম করুন।')
+            else:
+                suggestions.append('✅ আপনার BMI স্বাভাবিক। এভাবে চালিয়ে যান!')
+        
+        # Blood pressure suggestions
+        if health_data.get('bloodPressure'):
+            bp = health_data['bloodPressure']
+            systolic = bp.get('systolic', 0)
+            diastolic = bp.get('diastolic', 0)
+            
+            if systolic >= 140 or diastolic >= 90:
+                suggestions.append('🩺 রক্তচাপ বেশি। লবণ কম খান এবং ডাক্তারের পরামর্শ নিন।')
+            elif systolic < 120 and diastolic < 80:
+                suggestions.append('✅ রক্তচাপ স্বাভাবিক রয়েছে!')
+        
+        # Blood sugar suggestions
+        if health_data.get('bloodSugar'):
+            sugar = health_data['bloodSugar']
+            if sugar >= 126:
+                suggestions.append('⚠️ রক্তে শর্করা বেশি। চিনি ও মিষ্টি খাবার এড়িয়ে চলুন।')
+            elif sugar < 100:
+                suggestions.append('✅ রক্তে শর্করা স্বাভাবিক!')
+        
+        # Sleep suggestions
+        if health_data.get('sleep'):
+            sleep = health_data['sleep']
+            if sleep < 7:
+                suggestions.append('😴 প্রতিদিন কমপক্ষে ৭-৮ ঘন্টা ঘুমান।')
+            elif sleep >= 7:
+                suggestions.append('✅ ঘুমের পরিমাণ ভালো আছে!')
+        
+        # Generic suggestions
+        suggestions.append('💧 প্রতিদিন ৮-১০ গ্লাস পানি পান করুন')
+        suggestions.append('🥗 সুষম খাবার খান - শাকসবজি, ফল, প্রোটিন')
+        suggestions.append('🚶 নিয়মিত হাঁটুন বা ব্যায়াম করুন')
+        
+        return jsonify({
+            'success': True,
+            'suggestions': suggestions[:6]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ===================== IMAGE UPLOAD ENDPOINTS =====================
+
+@app.route('/api/images/upload', methods=['POST'])
+def upload_image():
+    """Upload image to database"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'message': 'No image file'}), 400
+        
+        file = request.files['image']
+        user_id = request.form.get('user_id')
+        category = request.form.get('category', 'Other')
+        title = request.form.get('title', '')
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No selected file'}), 400
+        
+        if file and allowed_file(file.filename):
+            # Read image as binary
+            import base64
+            image_binary = file.read()
+            image_base64 = base64.b64encode(image_binary).decode('utf-8')
+            
+            # Get file info
+            filename = secure_filename(file.filename)
+            file_ext = filename.rsplit('.', 1)[1].lower()
+            
+            image_data = {
+                'filename': filename,
+                'title': title or filename,
+                'category': category,
+                'file_type': file_ext,
+                'size': len(image_binary),
+                'data': image_base64
+            }
+            
+            image_id = db.save_image(user_id, image_data)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Image uploaded successfully',
+                'image_id': str(image_id)
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Invalid file type'}), 400
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/images/list', methods=['GET'])
+def list_images():
+    """Get user's images"""
+    try:
+        user_id = request.args.get('user_id')
+        category = request.args.get('category')
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        images = db.get_user_images(user_id, category)
+        
+        # Don't send full image data in list, just metadata
+        for img in images:
+            img['has_data'] = 'data' in img
+            if 'data' in img:
+                img.pop('data')
+        
+        return jsonify({
+            'success': True,
+            'images': images
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/images/<image_id>', methods=['GET'])
+def get_image(image_id):
+    """Get specific image with full data"""
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        images = db.get_user_images(user_id)
+        image = next((img for img in images if img['_id'] == image_id), None)
+        
+        if not image:
+            return jsonify({'success': False, 'message': 'Image not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'image': image
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/images/<image_id>', methods=['DELETE'])
+def delete_image(image_id):
+    """Delete an image"""
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        success = db.delete_image(image_id, user_id)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Image deleted'})
+        else:
+            return jsonify({'success': False, 'message': 'Image not found'}), 404
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ===================== MEDICINE TRACKER ENDPOINTS =====================
+
+@app.route('/api/medicines', methods=['GET', 'POST'])
+def manage_medicines():
+    """Get all medicines for a user or add a new medicine"""
+    try:
+        if request.method == 'GET':
+            user_id = request.args.get('userId')
+            if not user_id:
+                return jsonify({'success': False, 'message': 'User ID required'}), 400
+            
+            medicines = list(db.medicines.find({'userId': user_id}))
+            for medicine in medicines:
+                medicine['_id'] = str(medicine['_id'])
+            
+            return jsonify(medicines)
+        
+        elif request.method == 'POST':
+            data = request.json
+            user_id = data.get('userId')
+            if not user_id:
+                return jsonify({'success': False, 'message': 'User ID required'}), 400
+            
+            medicine_data = {
+                'userId': user_id,
+                'name': data.get('name'),
+                'dosage': data.get('dosage'),
+                'times': data.get('times', {}),
+                'startDate': data.get('startDate'),
+                'endDate': data.get('endDate'),
+                'notes': data.get('notes', ''),
+                'createdAt': data.get('createdAt', datetime.now().isoformat()),
+                'active': True
+            }
+            
+            result = db.medicines.insert_one(medicine_data)
+            medicine_data['_id'] = str(result.inserted_id)
+            
+            return jsonify(medicine_data), 201
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/medicines/<medicine_id>', methods=['GET', 'PUT', 'DELETE'])
+def manage_medicine(medicine_id):
+    """Get, update or delete a specific medicine"""
+    try:
+        from bson import ObjectId
+        
+        if request.method == 'DELETE':
+            db.medicines.delete_one({'_id': ObjectId(medicine_id)})
+            return jsonify({'success': True, 'message': 'Medicine deleted'})
+        
+        elif request.method == 'GET':
+            medicine = db.medicines.find_one({'_id': ObjectId(medicine_id)})
+            if medicine:
+                medicine['_id'] = str(medicine['_id'])
+                return jsonify(medicine)
+            return jsonify({'success': False, 'message': 'Medicine not found'}), 404
+        
+        elif request.method == 'PUT':
+            data = request.json
+            db.medicines.update_one(
+                {'_id': ObjectId(medicine_id)},
+                {'$set': data}
+            )
+            return jsonify({'success': True, 'message': 'Medicine updated'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ===================== NOTIFICATION ENDPOINTS =====================
+
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    """Get user notifications"""
+    try:
+        user_id = request.args.get('user_id')
+        unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        notifications = db.get_user_notifications(user_id, unread_only)
+        
+        return jsonify({
+            'success': True,
+            'notifications': notifications
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/notifications/<notification_id>/read', methods=['POST'])
+def mark_notification_read(notification_id):
+    """Mark notification as read"""
+    try:
+        user_id = request.json.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        success = db.mark_notification_read(notification_id, user_id)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Notification marked as read'})
+        else:
+            return jsonify({'success': False, 'message': 'Notification not found'}), 404
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ===================== EXPORT/IMPORT ENDPOINTS =====================
+
+@app.route('/api/export/data', methods=['POST'])
+def export_user_data():
+    """Export user data to CSV/PDF"""
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        export_format = data.get('format', 'csv')  # csv or pdf
+        data_types = data.get('data_types', ['all'])  # which data to export
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        import pandas as pd
+        from io import BytesIO
+        
+        # Collect data based on requested types
+        export_data = {}
+        
+        if 'all' in data_types or 'expenses' in data_types:
+            expenses = db.get_user_expenses(user_id)
+            export_data['expenses'] = expenses
+        
+        if 'all' in data_types or 'health' in data_types:
+            health_records = db.get_health_records(user_id, limit=100)
+            export_data['health'] = health_records
+        
+        if 'all' in data_types or 'tasks' in data_types:
+            tasks = db.get_user_tasks(user_id)
+            export_data['tasks'] = tasks
+        
+        # Create export file
+        if export_format == 'csv':
+            # Create CSV
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                for sheet_name, data_list in export_data.items():
+                    if data_list:
+                        df = pd.DataFrame(data_list)
+                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+            
+            output.seek(0)
+            file_data = base64.b64encode(output.read()).decode('utf-8')
+            filename = f'lifepilot_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+            
+        elif export_format == 'pdf':
+            # Create PDF (simplified version)
+            from reportlab.lib.pagesizes import letter
+            from reportlab.pdfgen import canvas
+            
+            output = BytesIO()
+            c = canvas.Canvas(output, pagesize=letter)
+            c.drawString(100, 750, f"Life Pilot AI - Data Export")
+            c.drawString(100, 730, f"User ID: {user_id}")
+            c.drawString(100, 710, f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            y = 680
+            for data_type, data_list in export_data.items():
+                c.drawString(100, y, f"{data_type.upper()}: {len(data_list)} records")
+                y -= 20
+            
+            c.save()
+            output.seek(0)
+            file_data = base64.b64encode(output.read()).decode('utf-8')
+            filename = f'lifepilot_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+        
+        # Save export record to database
+        export_record = {
+            'filename': filename,
+            'format': export_format,
+            'data_types': data_types,
+            'file_data': file_data,
+            'size': len(file_data)
+        }
+        
+        export_id = db.save_export(user_id, export_record)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Data exported successfully',
+            'export_id': str(export_id),
+            'filename': filename,
+            'download_url': f'/api/export/download/{export_id}'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/export/list', methods=['GET'])
+def list_exports():
+    """Get user's export history"""
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        exports = db.get_user_exports(user_id)
+        
+        # Remove file data from list response
+        for exp in exports:
+            if 'file_data' in exp:
+                exp.pop('file_data')
+        
+        return jsonify({
+            'success': True,
+            'exports': exports
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/export/download/<export_id>', methods=['GET'])
+def download_export(export_id):
+    """Download exported file"""
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'}), 400
+        
+        export = db.get_export(export_id, user_id)
+        
+        if not export:
+            return jsonify({'success': False, 'message': 'Export not found'}), 404
+        
+        # Decode base64 file data
+        import base64
+        file_data = base64.b64decode(export['file_data'])
+        
+        return send_file(
+            io.BytesIO(file_data),
+            mimetype='application/octet-stream',
+            as_attachment=True,
+            download_name=export['filename']
+        )
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.getenv('FLASK_PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port, use_reloader=False)
+
+

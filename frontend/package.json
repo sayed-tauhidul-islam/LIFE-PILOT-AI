@@ -1,6 +1,7 @@
 {
   "name": "life-pilot-ai-agent",
   "version": "1.0.0",
+  "type": "module",
   "description": "AI-powered life guidance agent for daily routines, financial advice, and productivity",
   "main": "index.js",
   "scripts": {

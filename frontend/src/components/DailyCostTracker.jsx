@@ -34,6 +34,51 @@ const DailyCostTracker = () => {
     { name: 'Other', icon: '💰', color: 'bg-gray-500' }
   ];
 
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    // Bangla numbers
+    const banglaNumbers = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const toBangla = (num) => num.toString().split('').map(d => banglaNumbers[parseInt(d)]).join('');
+    
+    if (diffMins < 1) return 'এইমাত্র';
+    if (diffMins < 60) return `${toBangla(diffMins)} মিনিট আগে`;
+    if (diffHours < 24) return `${toBangla(diffHours)} ঘন্টা আগে`;
+    if (diffDays < 7) return `${toBangla(diffDays)} দিন আগে`;
+    
+    // Format as date with Bangla
+    const day = toBangla(date.getDate());
+    const month = toBangla(date.getMonth() + 1);
+    const year = toBangla(date.getFullYear());
+    const hours = toBangla(date.getHours().toString().padStart(2, '0'));
+    const mins = toBangla(date.getMinutes().toString().padStart(2, '0'));
+    
+    return `${day}/${month}/${year} ${hours}:${mins}`;
+  };
+
+  const getCategoryLastUpdate = (category, frequency) => {
+    const categoryExpenses = dailyExpenses.filter(
+      exp => exp.category === category && exp.frequency === frequency
+    );
+    if (categoryExpenses.length === 0) return null;
+    
+    // Find the most recent expense
+    const latest = categoryExpenses.reduce((latest, exp) => {
+      const expDate = new Date(exp.created_at || exp.date);
+      const latestDate = new Date(latest.created_at || latest.date);
+      return expDate > latestDate ? exp : latest;
+    });
+    
+    return latest.created_at || latest.date;
+  };
+
   useEffect(() => {
     loadDailyExpenses();
   }, [currentMonth, currentYear]);
@@ -60,7 +105,8 @@ const DailyCostTracker = () => {
     try {
       const response = await api.post('/api/finance/daily-expense', {
         ...newExpense,
-        amount: parseFloat(newExpense.amount)
+        amount: parseFloat(newExpense.amount),
+        created_at: new Date().toISOString()
       });
 
       if (response.data.success) {
@@ -677,6 +723,151 @@ const DailyCostTracker = () => {
           </div>
         </div>
 
+        {/* Frequency-wise Category Breakdown */}
+        <div className="bg-white rounded-xl shadow-xl p-6 mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">📊 খরচের ব্রেকডাউন (Frequency-wise)</h2>
+          
+          {/* Daily Expenses */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-purple-700 mb-3 flex items-center gap-2">
+              📅 দৈনিক খরচ (Daily)
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {categories.map(category => {
+                const categoryExpenses = dailyExpenses.filter(
+                  exp => exp.category === category.name && exp.frequency === 'daily'
+                );
+                const total = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const lastUpdate = getCategoryLastUpdate(category.name, 'daily');
+                
+                if (total === 0) return null;
+                
+                return (
+                  <div key={category.name} className="bg-purple-50 border-2 border-purple-200 rounded-lg p-3">
+                    <div className="text-xl mb-1">{category.icon}</div>
+                    <p className="text-xs font-semibold text-gray-700">{category.name}</p>
+                    <p className="text-lg font-bold text-purple-700">৳{total.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">{categoryExpenses.length} items</p>
+                    {lastUpdate && (
+                      <p className="text-xs text-purple-600 mt-1 truncate" title={formatTimestamp(lastUpdate)}>
+                        🕐 {formatTimestamp(lastUpdate)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {dailyExpenses.filter(exp => exp.frequency === 'daily').length === 0 && (
+              <p className="text-gray-400 text-center py-4">কোন দৈনিক খরচ নেই</p>
+            )}
+          </div>
+
+          {/* Weekly Expenses */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-blue-700 mb-3 flex items-center gap-2">
+              📆 সাপ্তাহিক খরচ (Weekly)
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {categories.map(category => {
+                const categoryExpenses = dailyExpenses.filter(
+                  exp => exp.category === category.name && exp.frequency === 'weekly'
+                );
+                const total = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const lastUpdate = getCategoryLastUpdate(category.name, 'weekly');
+                
+                if (total === 0) return null;
+                
+                return (
+                  <div key={category.name} className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
+                    <div className="text-xl mb-1">{category.icon}</div>
+                    <p className="text-xs font-semibold text-gray-700">{category.name}</p>
+                    <p className="text-lg font-bold text-blue-700">৳{total.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">{categoryExpenses.length} items</p>
+                    {lastUpdate && (
+                      <p className="text-xs text-blue-600 mt-1 truncate" title={formatTimestamp(lastUpdate)}>
+                        🕐 {formatTimestamp(lastUpdate)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {dailyExpenses.filter(exp => exp.frequency === 'weekly').length === 0 && (
+              <p className="text-gray-400 text-center py-4">কোন সাপ্তাহিক খরচ নেই</p>
+            )}
+          </div>
+
+          {/* Monthly Expenses */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-green-700 mb-3 flex items-center gap-2">
+              📊 মাসিক খরচ (Monthly)
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {categories.map(category => {
+                const categoryExpenses = dailyExpenses.filter(
+                  exp => exp.category === category.name && exp.frequency === 'monthly'
+                );
+                const total = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const lastUpdate = getCategoryLastUpdate(category.name, 'monthly');
+                
+                if (total === 0) return null;
+                
+                return (
+                  <div key={category.name} className="bg-green-50 border-2 border-green-200 rounded-lg p-3">
+                    <div className="text-xl mb-1">{category.icon}</div>
+                    <p className="text-xs font-semibold text-gray-700">{category.name}</p>
+                    <p className="text-lg font-bold text-green-700">৳{total.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">{categoryExpenses.length} items</p>
+                    {lastUpdate && (
+                      <p className="text-xs text-green-600 mt-1 truncate" title={formatTimestamp(lastUpdate)}>
+                        🕐 {formatTimestamp(lastUpdate)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {dailyExpenses.filter(exp => exp.frequency === 'monthly').length === 0 && (
+              <p className="text-gray-400 text-center py-4">কোন মাসিক খরচ নেই</p>
+            )}
+          </div>
+
+          {/* Yearly Expenses */}
+          <div>
+            <h3 className="text-lg font-semibold text-orange-700 mb-3 flex items-center gap-2">
+              🗓️ বার্ষিক খরচ (Yearly)
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {categories.map(category => {
+                const categoryExpenses = dailyExpenses.filter(
+                  exp => exp.category === category.name && exp.frequency === 'yearly'
+                );
+                const total = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const lastUpdate = getCategoryLastUpdate(category.name, 'yearly');
+                
+                if (total === 0) return null;
+                
+                return (
+                  <div key={category.name} className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3">
+                    <div className="text-xl mb-1">{category.icon}</div>
+                    <p className="text-xs font-semibold text-gray-700">{category.name}</p>
+                    <p className="text-lg font-bold text-orange-700">৳{total.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">{categoryExpenses.length} items</p>
+                    {lastUpdate && (
+                      <p className="text-xs text-orange-600 mt-1 truncate" title={formatTimestamp(lastUpdate)}>
+                        🕐 {formatTimestamp(lastUpdate)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {dailyExpenses.filter(exp => exp.frequency === 'yearly').length === 0 && (
+              <p className="text-gray-400 text-center py-4">কোন বার্ষিক খরচ নেই</p>
+            )}
+          </div>
+        </div>
+
         {/* Get AI Prediction Button */}
         {dailyExpenses.length >= 5 && (
           <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400 rounded-xl p-6 mb-6">
@@ -834,7 +1025,14 @@ const DailyCostTracker = () => {
                       <div className="flex-1">
                         <h4 className="font-bold text-gray-800">{expense.category}</h4>
                         <p className="text-sm text-gray-600">{expense.description}</p>
-                        <p className="text-xs text-gray-400">{expense.date} • {expense.payment_method}</p>
+                        <p className="text-xs text-gray-400">
+                          {expense.date} • {expense.payment_method}
+                          {expense.created_at && (
+                            <span className="ml-2 text-purple-500">
+                              📅 {formatTimestamp(expense.created_at)}
+                            </span>
+                          )}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">

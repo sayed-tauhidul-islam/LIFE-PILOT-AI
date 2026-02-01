@@ -137,10 +137,13 @@ const FinanceDashboard = () => {
         risk_tolerance: 'moderate'
       });
       
-      setAiSuggestions(response.data.suggestions || []);
-      setHealthScore(response.data.health_score || null);
+      if (response.data) {
+        setAiSuggestions(response.data.suggestions || []);
+        setHealthScore(response.data.health_score || null);
+      }
     } catch (error) {
       console.error('Error getting AI suggestions:', error);
+      alert('AI সুপারিশ পেতে সমস্যা হয়েছে। ব্যাকএন্ড সার্ভার চালু আছে কিনা চেক করুন।');
     } finally {
       setLoading(false);
     }
@@ -155,23 +158,26 @@ const FinanceDashboard = () => {
     }
     
     try {
-      await api.post('/api/finance/profile', {
+      const response = await api.post('/api/finance/profile', {
         total_income: income
       });
       
-      setFinanceData({
-        ...financeData,
-        totalIncome: income,
-        netSavings: income - financeData.totalExpenses,
-        savingsRate: income > 0 ? ((income - financeData.totalExpenses) / income * 100) : 0
-      });
-      
-      setShowIncomeModal(false);
-      setIncomeInput('');
-      alert('✅ আয় সফলভাবে আপডেট করা হয়েছে!');
+      if (response.data.success) {
+        setFinanceData({
+          ...financeData,
+          totalIncome: income,
+          netSavings: income - financeData.totalExpenses,
+          savingsRate: income > 0 ? ((income - financeData.totalExpenses) / income * 100) : 0
+        });
+        
+        setShowIncomeModal(false);
+        setIncomeInput('');
+        alert('✅ আয় সফলভাবে আপডেট করা হয়েছে!');
+      }
     } catch (error) {
       console.error('Error updating income:', error);
-      alert('❌ আয় আপডেট করতে সমস্যা হয়েছে');
+      const errorMsg = error.response?.data?.message || error.message || 'Network Error';
+      alert(`❌ আয় আপডেট করতে সমস্যা হয়েছে!\nError: ${errorMsg}\nব্যাকএন্ড সার্ভার চালু আছে কিনা চেক করুন।`);
     }
   };
   
@@ -196,8 +202,10 @@ const FinanceDashboard = () => {
         alert('✅ লক্ষ্য আপডেট করা হয়েছে!');
       } else {
         const response = await api.post('/api/finance/goal', goalData);
-        setGoals([...goals, response.data.goal]);
-        alert('✅ লক্ষ্য যোগ করা হয়েছে!');
+        if (response.data && response.data.goal) {
+          setGoals([...goals, response.data.goal]);
+          alert('✅ লক্ষ্য যোগ করা হয়েছে!');
+        }
       }
       
       setShowGoalModal(false);
@@ -210,7 +218,8 @@ const FinanceDashboard = () => {
       });
     } catch (error) {
       console.error('Error saving goal:', error);
-      alert('❌ লক্ষ্য সেভ করতে সমস্যা হয়েছে');
+      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+      alert(`❌ লক্ষ্য যোগ করতে সমস্যা হয়েছে!\nError: ${errorMsg}\nআবার চেষ্টা করুন।`);
     }
   };
   
