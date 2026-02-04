@@ -17,6 +17,8 @@ const FinanceDashboard = () => {
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [healthScore, setHealthScore] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showBudgetBreakdown, setShowBudgetBreakdown] = useState(false);
+  const [budgetRecommendations, setBudgetRecommendations] = useState(null);
   
   // Modal states
   const [showIncomeModal, setShowIncomeModal] = useState(false);
@@ -163,22 +165,69 @@ const FinanceDashboard = () => {
       });
       
       if (response.data.success) {
-        setFinanceData({
+        const newFinanceData = {
           ...financeData,
           totalIncome: income,
           netSavings: income - financeData.totalExpenses,
           savingsRate: income > 0 ? ((income - financeData.totalExpenses) / income * 100) : 0
-        });
+        };
+        
+        setFinanceData(newFinanceData);
+        
+        // Generate budget breakdown recommendations based on 50-30-20 rule
+        generateBudgetRecommendations(income);
         
         setShowIncomeModal(false);
         setIncomeInput('');
         alert('✅ আয় সফলভাবে আপডেট করা হয়েছে!');
+        setShowBudgetBreakdown(true);
       }
     } catch (error) {
       console.error('Error updating income:', error);
       const errorMsg = error.response?.data?.message || error.message || 'Network Error';
       alert(`❌ আয় আপডেট করতে সমস্যা হয়েছে!\nError: ${errorMsg}\nব্যাকএন্ড সার্ভার চালু আছে কিনা চেক করুন।`);
     }
+  };
+  
+  // Generate budget breakdown recommendations
+  const generateBudgetRecommendations = (income) => {
+    const necessities = income * 0.50; // 50% for necessities
+    const wants = income * 0.30; // 30% for wants
+    const savings = income * 0.20; // 20% for savings
+    
+    const recommendations = {
+      income: income,
+      breakdown: {
+        necessities: {
+          total: necessities,
+          percentage: 50,
+          categories: {
+            housing: necessities * 0.35, // 35% of necessities (বাসস্থান)
+            food: necessities * 0.25, // 25% of necessities (খাদ্য)
+            transportation: necessities * 0.20, // 20% of necessities (যাতায়াত)
+            utilities: necessities * 0.12, // 12% of necessities (ইউটিলিটি)
+            healthcare: necessities * 0.05, // 5% of necessities (স্বাস্থ্য)
+            otherBills: necessities * 0.03 // 3% of necessities (অন্যান্য বিল)
+          }
+        },
+        wants: {
+          total: wants,
+          percentage: 30
+        },
+        savings: {
+          total: savings,
+          percentage: 20
+        }
+      },
+      tips: [
+        `আপনার মাসিক আয় ৳${income.toLocaleString()} এর উপর ভিত্তি করে 50-30-20 বাজেট নিয়ম অনুসরণ করুন`,
+        `প্রয়োজনীয় খরচে ৳${necessities.toLocaleString()} (50%) বরাদ্দ করুন`,
+        `ইচ্ছা পূরণে ৳${wants.toLocaleString()} (30%) খরচ করুন`,
+        `সঞ্চয় এবং বিনিয়োগে ৳${savings.toLocaleString()} (20%) রাখুন`
+      ]
+    };
+    
+    setBudgetRecommendations(recommendations);
   };
   
   // Handle goal creation/update
@@ -913,6 +962,199 @@ const FinanceDashboard = () => {
                   {editingGoal ? '✅ Update' : '✅ Save'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Budget Breakdown Modal */}
+        {showBudgetBreakdown && budgetRecommendations && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 my-8">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-3xl font-bold text-gray-800">
+                  💡 Budget Planning Tips (50-30-20 Rule)
+                </h3>
+                <button
+                  onClick={() => setShowBudgetBreakdown(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Budget Summary */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl mb-6 border-2 border-blue-200">
+                <p className="text-lg text-gray-700 mb-4">
+                  বিশ্বজনীন স্বীকৃত <span className="font-bold">50-30-20 নিয়ম</span> অনুসরণ করে আপনার বাজেট পরিকল্পনা করুন এবং আপনার ব্যাটাগুলি পরিচালনা করুন।
+                </p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <p className="text-sm text-gray-600">Monthly Income</p>
+                    <p className="text-2xl font-bold text-green-600">৳{budgetRecommendations.income.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <p className="text-sm text-gray-600">Necessities (50%)</p>
+                    <p className="text-2xl font-bold text-blue-600">৳{budgetRecommendations.breakdown.necessities.total.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <p className="text-sm text-gray-600">Wants (30%)</p>
+                    <p className="text-2xl font-bold text-purple-600">৳{budgetRecommendations.breakdown.wants.total.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 50% - Necessities Breakdown */}
+              <div className="mb-6">
+                <h4 className="text-2xl font-bold text-gray-800 mb-4">
+                  🏠 50% - Necessities (প্রয়োজনীয় খরচ - মাসিক আয়ের ৫০%)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* বাসস্থান (Housing) */}
+                  <div className="bg-gradient-to-br from-blue-100 to-blue-200 p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🏡</span>
+                      <h5 className="font-bold text-gray-800">বাসস্থান (Housing)</h5>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-700">৳{budgetRecommendations.breakdown.necessities.categories.housing.toLocaleString()}</p>
+                    <ul className="text-sm text-gray-700 mt-2 space-y-1">
+                      <li>• ভাড়া বা বন্ডকস্ট পেমেন্ট</li>
+                      <li>• সম্পত্তি কর</li>
+                      <li>• বাড়ি রক্ষণাবেক্ষণ</li>
+                      <li>• বাড়ি বীমা</li>
+                    </ul>
+                  </div>
+
+                  {/* খাদ্য (Food & Groceries) */}
+                  <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🍎</span>
+                      <h5 className="font-bold text-gray-800">খাদ্য (Food & Groceries)</h5>
+                    </div>
+                    <p className="text-2xl font-bold text-green-700">৳{budgetRecommendations.breakdown.necessities.categories.food.toLocaleString()}</p>
+                    <ul className="text-sm text-gray-700 mt-2 space-y-1">
+                      <li>• দৈনন্দিন মুদি সামগ্রী</li>
+                      <li>• ভাত, খাবার ও শাকসবজি</li>
+                      <li>• মাংস, মাছ, ডিম, দুধ</li>
+                      <li>• প্রয়োজনীয় খাদ্য সামগ্রী</li>
+                    </ul>
+                  </div>
+
+                  {/* যাতায়াত (Transportation) */}
+                  <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🚌</span>
+                      <h5 className="font-bold text-gray-800">যাতায়াত (Transportation)</h5>
+                    </div>
+                    <p className="text-2xl font-bold text-yellow-700">৳{budgetRecommendations.breakdown.necessities.categories.transportation.toLocaleString()}</p>
+                    <ul className="text-sm text-gray-700 mt-2 space-y-1">
+                      <li>• পাবলিক পেমেন্ট/EMI</li>
+                      <li>• জ্বালানি খরচ</li>
+                      <li>• পার্কিং চার্জ</li>
+                      <li>• গাড়ি রক্ষণাবেক্ষণ</li>
+                    </ul>
+                  </div>
+
+                  {/* ইউটিলিটি (Utilities) */}
+                  <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">⚡</span>
+                      <h5 className="font-bold text-gray-800">ইউটিলিটি (Utilities)</h5>
+                    </div>
+                    <p className="text-2xl font-bold text-orange-700">৳{budgetRecommendations.breakdown.necessities.categories.utilities.toLocaleString()}</p>
+                    <ul className="text-sm text-gray-700 mt-2 space-y-1">
+                      <li>• বিদ্যুৎ বিল</li>
+                      <li>• পানি ও গ্যাস বিল</li>
+                      <li>• ইন্টারনেট ও ফোন</li>
+                      <li>• কেবল/স্ট্রিমিং সার্ভিস</li>
+                    </ul>
+                  </div>
+
+                  {/* স্বাস্থ্য (Healthcare) */}
+                  <div className="bg-gradient-to-br from-red-100 to-red-200 p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">💊</span>
+                      <h5 className="font-bold text-gray-800">স্বাস্থ্য (Healthcare)</h5>
+                    </div>
+                    <p className="text-2xl font-bold text-red-700">৳{budgetRecommendations.breakdown.necessities.categories.healthcare.toLocaleString()}</p>
+                    <ul className="text-sm text-gray-700 mt-2 space-y-1">
+                      <li>• স্বাস্থ্য বীমা প্রিমিয়াম</li>
+                      <li>• নিয়মিত ওষুধপত্র</li>
+                      <li>• ডাক্তার চেকআপ</li>
+                      <li>• জরুরি চিকিৎসা খরচ</li>
+                    </ul>
+                  </div>
+
+                  {/* অন্যান্য বিল (Other Bills) */}
+                  <div className="bg-gradient-to-br from-purple-100 to-purple-200 p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">📄</span>
+                      <h5 className="font-bold text-gray-800">অন্যান্য বিল (Other Bills)</h5>
+                    </div>
+                    <p className="text-2xl font-bold text-purple-700">৳{budgetRecommendations.breakdown.necessities.categories.otherBills.toLocaleString()}</p>
+                    <ul className="text-sm text-gray-700 mt-2 space-y-1">
+                      <li>• ঋণ পরিশোধ (লোন EMI)</li>
+                      <li>• ক্রেডিট কার্ড পেমেন্ট</li>
+                      <li>• শিক্ষার দেওয়ানোশা খরচ</li>
+                      <li>• বাধ্যতামূলক বিল</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 30% - Wants */}
+              <div className="mb-6">
+                <h4 className="text-2xl font-bold text-gray-800 mb-4">
+                  🎭 30% - Wants (ইচ্ছা - মাসিক আয়ের ৩০%)
+                </h4>
+                <div className="bg-gradient-to-br from-purple-100 to-pink-200 p-6 rounded-xl">
+                  <p className="text-xl font-bold text-purple-700 mb-4">৳{budgetRecommendations.breakdown.wants.total.toLocaleString()}</p>
+                  <ul className="text-gray-700 space-y-2">
+                    <li>• বিনোদন (সিনেমা, কন্সার্ট, হবিস)</li>
+                    <li>• ডাইনিং আউট (রেস্টুরেন্ট, ক্যাফে)</li>
+                    <li>• শপিং (পোশাক, গ্যাজেট)</li>
+                    <li>• ভ্রমণ ও ছুটি</li>
+                    <li>• জিম মেম্বারশিপ</li>
+                    <li>• বিলাসবহুল আইটেম</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* 20% - Savings */}
+              <div className="mb-6">
+                <h4 className="text-2xl font-bold text-gray-800 mb-4">
+                  💰 20% - Savings & Investment (সঞ্চয় - মাসিক আয়ের ২০%)
+                </h4>
+                <div className="bg-gradient-to-br from-green-100 to-teal-200 p-6 rounded-xl">
+                  <p className="text-xl font-bold text-green-700 mb-4">৳{budgetRecommendations.breakdown.savings.total.toLocaleString()}</p>
+                  <ul className="text-gray-700 space-y-2">
+                    <li>• ইমার্জেন্সি ফান্ড (জরুরি তহবিল)</li>
+                    <li>• রিটায়ারমেন্ট সঞ্চয়</li>
+                    <li>• বিনিয়োগ (স্টক, বন্ড, মিউচুয়াল ফান্ড)</li>
+                    <li>• সঞ্চয়ী হিসাব</li>
+                    <li>• ভবিষ্যৎ লক্ষ্য (বাড়ি, গাড়ি, শিক্ষা)</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500">
+                <h5 className="font-bold text-gray-800 mb-2">💡 Personalized Tips:</h5>
+                <ul className="space-y-2 text-gray-700">
+                  {budgetRecommendations.tips.map((tip, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-blue-600 font-bold">✓</span>
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <button
+                onClick={() => setShowBudgetBreakdown(false)}
+                className="w-full mt-6 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 font-semibold"
+              >
+                Close
+              </button>
             </div>
           </div>
         )}

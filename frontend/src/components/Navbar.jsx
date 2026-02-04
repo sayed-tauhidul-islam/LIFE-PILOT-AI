@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FaBars, FaTimes, FaUser, FaCog, FaSignOutAlt, FaBrain, FaCloudSunRain, FaPrayingHands, FaDollarSign, FaHeartbeat, FaCalendarAlt, FaTasks, FaImage, FaCalendarCheck, FaChartBar, FaRobot } from 'react-icons/fa'
 
@@ -7,6 +7,24 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
   const [profileOpen, setProfileOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const profileRef = useRef(null)
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false)
+      }
+    }
+
+    if (profileOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [profileOpen])
 
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const toggleProfile = () => setProfileOpen(!profileOpen)
@@ -48,12 +66,15 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
               {menuOpen ? <FaTimes size={24} className="text-white" /> : <FaBars size={24} className="text-white" />}
             </button>
             
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center shadow-lg border-2 border-red-500 animate-pulse">
-                <FaBrain className="text-white text-xl" />
+            <Link to="/" className="flex items-center space-x-2 group">
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 bg-gradient-to-br from-red-600 via-red-500 to-red-800 rounded-full flex items-center justify-center shadow-2xl border-2 border-red-400 animate-pulse group-hover:scale-110 transition-transform duration-300">
+                  <FaBrain className="text-white text-2xl animate-pulse" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-red-400 to-red-600 rounded-full blur-md opacity-50 animate-ping"></div>
               </div>
-              <h1 className="text-2xl font-bold text-white hidden sm:block">
-                Life Pilot <span className="text-red-400">AI</span>
+              <h1 className="text-xl font-bold text-white hidden sm:block group-hover:scale-105 transition-transform">
+                Life Pilot <span className="text-red-400 animate-pulse">AI</span>
               </h1>
             </Link>
           </div>
@@ -71,9 +92,9 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
                     href={item.path}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2.5 rounded-lg font-bold text-base transition-all flex items-center gap-2 whitespace-nowrap text-white hover:bg-red-600 hover:scale-105 border border-transparent hover:border-red-400"
+                    className="px-2.5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-1.5 whitespace-nowrap text-white hover:bg-red-600 hover:scale-105 border border-transparent hover:border-red-400"
                   >
-                    <Icon className="text-lg" />
+                    <Icon className="text-base" />
                     {item.label}
                   </a>
                 )
@@ -83,13 +104,13 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-4 py-2.5 rounded-lg font-bold text-base transition-all flex items-center gap-2 whitespace-nowrap ${
+                  className={`px-2.5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-1.5 whitespace-nowrap ${
                     isActive
                       ? 'bg-red-600 text-white shadow-lg scale-105 border border-red-400'
                       : 'text-white hover:bg-red-600 hover:scale-105 border border-transparent hover:border-red-400'
                   }`}
                 >
-                  <Icon className="text-lg" />
+                  <Icon className="text-base" />
                   {item.label}
                 </Link>
               )
@@ -97,7 +118,7 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
           </div>
 
           {/* Right - User Profile */}
-          <div className="relative">
+          <div className="relative" ref={profileRef}>
             <button
               onClick={toggleProfile}
               className="flex items-center space-x-2 bg-red-600 bg-opacity-30 hover:bg-opacity-50 rounded-lg px-4 py-2 transition-all border border-red-500/50 hover:border-red-400"
@@ -107,7 +128,7 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
                 <FaUser className="text-white" />
               </div>
               <span className="hidden md:block font-semibold text-white">
-                {user?.name || 'User'}
+                {user?.full_name || user?.name || user?.username || 'User'}
               </span>
             </button>
 
@@ -128,8 +149,11 @@ const Navbar = ({ theme, setTheme, user, onLogout, onLoginClick }) => {
                 ) : (
                   <>
                     <div className="px-4 py-3 border-b border-red-900">
-                      <p className="font-bold text-white">{user?.name || 'Guest User'}</p>
+                      <p className="font-bold text-white">{user?.full_name || user?.name || user?.username || 'User'}</p>
                       <p className="text-sm text-gray-400">{user?.email || 'No email'}</p>
+                      {!user?.is_guest && user?.user_id && (
+                        <p className="text-xs text-gray-500 mt-1">ID: {user.user_id.slice(0, 8)}...</p>
+                      )}
                     </div>
                     <Link
                       to="/settings"

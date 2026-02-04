@@ -23,6 +23,182 @@ const RoutineSetup = ({ onSave, onClose }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [analyzingRoutine, setAnalyzingRoutine] = useState(false);
 
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Load user profile, health data, and finance data
+      const profileResponse = await api.get(`/api/user/profile?user_id=${user.id}`);
+      const healthResponse = await api.get(`/api/health/profile?userId=${user.id}`);
+      const financeResponse = await api.get(`/api/finance/summary?user_id=${user.id}`);
+
+      if (profileResponse.data && healthResponse.data && financeResponse.data) {
+        // Generate AI-powered routine based on user data
+        generateAIRoutine(profileResponse.data.data, healthResponse.data.data, financeResponse.data);
+      }
+    } catch (error) {
+      console.log('No user data found, will create new routine');
+    }
+  };
+
+  const generateAIRoutine = (profile, health, finance) => {
+    const autoRoutine = [];
+    const currentDate = new Date();
+    
+    // Determine user type
+    let detectedUserType = 'other';
+    if (profile.occupation && profile.occupation.toLowerCase().includes('student')) {
+      detectedUserType = 'student';
+    } else if (profile.workHours && profile.workDays) {
+      detectedUserType = 'professional';
+    }
+    setUserType(detectedUserType);
+
+    // Add morning routine based on health
+    if (health && health.sleep < 7) {
+      autoRoutine.push({
+        id: Date.now() + 1,
+        title: 'ফজরের নামাজ এবং সকালের ব্যায়াম',
+        startTime: '05:30',
+        endTime: '06:30',
+        days: ['শনিবার', 'রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার'],
+        category: 'exercise',
+        priority: 'high'
+      });
+    }
+
+    // Add work/study time based on occupation
+    if (profile.workHours && profile.workDays) {
+      const workHours = parseInt(profile.workHours) || 8;
+      const startHour = detectedUserType === 'student' ? '09:00' : '10:00';
+      const endTime = new Date();
+      endTime.setHours(parseInt(startHour.split(':')[0]) + workHours);
+      
+      autoRoutine.push({
+        id: Date.now() + 2,
+        title: detectedUserType === 'student' ? 'পড়াশোনা/ক্লাস' : 'অফিসের কাজ',
+        startTime: startHour,
+        endTime: `${String(endTime.getHours()).padStart(2, '0')}:00`,
+        days: ['শনিবার', 'রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার'],
+        category: detectedUserType === 'student' ? 'study' : 'work',
+        priority: 'high'
+      });
+    }
+
+    // Add financial planning time if expenses are high
+    if (finance && finance.monthlyExpenses > finance.monthlyIncome * 0.8) {
+      autoRoutine.push({
+        id: Date.now() + 3,
+        title: 'আর্থিক পরিকল্পনা ও বাজেট রিভিউ',
+        startTime: '20:00',
+        endTime: '20:30',
+        days: ['শুক্রবার', 'রবিবার'],
+        category: 'other',
+        priority: 'high'
+      });
+      
+      // Add AI suggestion about finance
+      setAiSuggestions(prev => [...prev, {
+        type: 'warning',
+        icon: '💰',
+        title: 'আর্থিক সতর্কতা',
+        message: `আপনার মাসিক খরচ ৳${finance.monthlyExpenses} যা আয়ের ${((finance.monthlyExpenses / finance.monthlyIncome) * 100).toFixed(0)}%। খরচ কমানোর জন্য সাপ্তাহিক বাজেট রিভিউ করুন।`,
+        action: 'বাজেট পরিকল্পনা'
+      }]);
+    }
+
+    // Add health checkup time if BMI is concerning
+    if (health && health.weight && health.height) {
+      const bmi = health.weight / ((health.height / 100) ** 2);
+      if (bmi < 18.5 || bmi > 25) {
+        autoRoutine.push({
+          id: Date.now() + 4,
+          title: 'স্বাস্থ্য পর্যবেক্ষণ ও ব্যায়াম',
+          startTime: '18:00',
+          endTime: '19:00',
+          days: ['রবিবার', 'মঙ্গলবার', 'বৃহস্পতিবার'],
+          category: 'exercise',
+          priority: 'high'
+        });
+
+        setAiSuggestions(prev => [...prev, {
+          type: 'warning',
+          icon: '⚖️',
+          title: 'স্বাস্থ্য সতর্কতা',
+          message: `আপনার BMI ${bmi.toFixed(1)} যা ${bmi < 18.5 ? 'কম' : 'বেশি'}। নিয়মিত ব্যায়াম এবং সুষম খাবার খান।`,
+          action: 'স্বাস্থ্য পরিকল্পনা'
+        }]);
+      }
+    }
+
+    // Add prayer times (5 times)
+    const prayerTimes = [
+      { name: 'ফজর', time: '05:30', end: '05:50' },
+      { name: 'যোহর', time: '13:00', end: '13:20' },
+      { name: 'আসর', time: '16:30', end: '16:50' },
+      { name: 'মাগরিব', time: '18:15', end: '18:30' },
+      { name: 'এশা', time: '19:45', end: '20:05' }
+    ];
+
+    prayerTimes.forEach((prayer, index) => {
+      autoRoutine.push({
+        id: Date.now() + 5 + index,
+        title: `${prayer.name} নামাজ`,
+        startTime: prayer.time,
+        endTime: prayer.end,
+        days: ['শনিবার', 'রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার'],
+        category: 'prayer',
+        priority: 'high'
+      });
+    });
+
+    // Add family time based on family size
+    if (profile.familySize && parseInt(profile.familySize) > 1) {
+      autoRoutine.push({
+        id: Date.now() + 10,
+        title: 'পরিবারের সাথে সময়',
+        startTime: '21:00',
+        endTime: '22:00',
+        days: ['শুক্রবার', 'শনিবার'],
+        category: 'break',
+        priority: 'medium'
+      });
+    }
+
+    // Add sleep routine
+    autoRoutine.push({
+      id: Date.now() + 11,
+      title: 'ঘুমের প্রস্তুতি',
+      startTime: '22:30',
+      endTime: '23:00',
+      days: ['শনিবার', 'রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার'],
+      category: 'break',
+      priority: 'high'
+    });
+
+    // Set the generated routine
+    setRoutine({
+      name: `${profile.name || 'আপনার'} দৈনন্দিন রুটিন`,
+      type: detectedUserType,
+      schedule: autoRoutine
+    });
+
+    // Add success AI suggestion
+    setAiSuggestions(prev => [...prev, {
+      type: 'info',
+      icon: '✅',
+      title: 'AI রুটিন তৈরি সম্পন্ন',
+      message: `আপনার স্বাস্থ্য এবং আর্থিক তথ্যের উপর ভিত্তি করে ${autoRoutine.length}টি কার্যক্রম সহ একটি সম্পূর্ণ রুটিন তৈরি করা হয়েছে।`,
+      action: 'রুটিন দেখুন'
+    }]);
+
+    setShowSuggestions(true);
+  };
+
   const weekDays = ['শনিবার', 'রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার'];
   
   const priorities = {

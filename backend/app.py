@@ -791,6 +791,80 @@ def update_file_metadata(metadata_id):
             'message': str(e)
         }), 500
 
+@app.route('/api/files/preview/<metadata_id>', methods=['GET'])
+def preview_file(metadata_id):
+    """Preview file content (for text, csv, json files)"""
+    try:
+        # Get metadata
+        metadata = file_manager.get_file_metadata(metadata_id)
+        if not metadata:
+            return jsonify({
+                'success': False,
+                'message': 'File not found'
+            }), 404
+        
+        # Get file from GridFS
+        file_data, content_type, filename = file_manager.get_file(metadata['file_id'])
+        
+        if file_data is None:
+            return jsonify({
+                'success': False,
+                'message': 'File data not found'
+            }), 404
+        
+        file_type = metadata.get('file_type', 'other')
+        
+        # For text files, return content as text
+        if file_type in ['text', 'csv']:
+            try:
+                content = file_data.decode('utf-8')
+                return jsonify({
+                    'success': True,
+                    'file_type': file_type,
+                    'content': content,
+                    'filename': filename
+                })
+            except:
+                return jsonify({
+                    'success': False,
+                    'message': 'Unable to decode file content'
+                }), 400
+        
+        # For PDFs, return base64 encoded data
+        elif file_type == 'pdf':
+            import base64
+            encoded_data = base64.b64encode(file_data).decode('utf-8')
+            return jsonify({
+                'success': True,
+                'file_type': file_type,
+                'data': encoded_data,
+                'filename': filename
+            })
+        
+        # For images, return base64 encoded data
+        elif file_type == 'image':
+            import base64
+            encoded_data = base64.b64encode(file_data).decode('utf-8')
+            return jsonify({
+                'success': True,
+                'file_type': file_type,
+                'data': encoded_data,
+                'mime_type': content_type,
+                'filename': filename
+            })
+        
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Preview not supported for {file_type} files. Please download instead.'
+            }), 400
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 # ===================== FINANCE MANAGEMENT ENDPOINTS =====================
 
 @app.route('/api/finance/profile', methods=['GET', 'POST'])
@@ -882,6 +956,10 @@ def add_financial_goal():
         }
         
         result = db.add_financial_goal(goal_data)
+        
+        # Convert ObjectId to string for JSON serialization
+        goal_data['_id'] = str(result)
+        goal_data['created_at'] = goal_data['created_at'].isoformat()
         
         return jsonify({
             'success': True,

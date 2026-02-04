@@ -49,6 +49,28 @@ class FileManager:
         # Map extension to category
         file_category = self._get_file_category(file_extension)
         
+        # Handle duplicate names - check if file with same custom_name exists
+        final_custom_name = custom_name or original_filename
+        existing_file = self.files_metadata.find_one({
+            'user_id': user_id,
+            'custom_name': final_custom_name
+        })
+        
+        # If duplicate found, append a number to the name
+        if existing_file:
+            name_without_ext = os.path.splitext(final_custom_name)[0]
+            counter = 1
+            while True:
+                new_name = f"{name_without_ext}_{counter}{file_extension}"
+                duplicate_check = self.files_metadata.find_one({
+                    'user_id': user_id,
+                    'custom_name': new_name
+                })
+                if not duplicate_check:
+                    final_custom_name = new_name
+                    break
+                counter += 1
+        
         # Store file in GridFS
         file_id = self.fs.put(
             file_data,
@@ -62,7 +84,7 @@ class FileManager:
             'user_id': user_id,
             'file_id': str(file_id),
             'original_filename': original_filename,
-            'custom_name': custom_name or original_filename,
+            'custom_name': final_custom_name,
             'file_extension': file_extension,
             'file_type': file_category,
             'mime_type': mime_type,

@@ -177,15 +177,53 @@ const FileManager = ({ userId, theme = 'light', onClose }) => {
 
   // Upload file
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      alert('অনুগ্রহ করে একটি ফাইল নির্বাচন করুন');
+      return;
+    }
+
+    // Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (selectedFile.size > maxSize) {
+      alert('ফাইল সাইজ খুব বেশি! সর্বোচ্চ 50MB পর্যন্ত আপলোড করা যাবে।');
+      return;
+    }
+
+    // Check file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/bmp',
+      'image/svg+xml',
+      'image/webp',
+      'text/csv',
+      'text/plain',
+      'application/zip',
+      'application/x-rar-compressed'
+    ];
+
+    const fileExtension = selectedFile.name.split('.').pop().toLowerCase();
+    const allowedExtensions = ['pdf', 'xlsx', 'xls', 'xlsm', 'doc', 'docx', 'odt', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'csv', 'tsv', 'txt', 'md', 'ppt', 'pptx', 'zip', 'rar'];
+    
+    if (!allowedExtensions.includes(fileExtension)) {
+      alert(`এই ফাইল টাইপ সাপোর্ট করে না! সাপোর্টেড: ${allowedExtensions.join(', ')}`);
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
 
     const formData = new FormData();
     formData.append('file', selectedFile);
-    formData.append('user_id', userId);
-    formData.append('custom_name', customName);
+    formData.append('user_id', userId || 'demo_user');
+    formData.append('custom_name', customName || selectedFile.name);
 
     try {
       const response = await axios.post(`${API_URL}/api/files/upload`, formData, {
@@ -196,6 +234,7 @@ const FileManager = ({ userId, theme = 'light', onClose }) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
         },
+        timeout: 60000 // 60 second timeout
       });
 
       if (response.data.success) {

@@ -77,21 +77,173 @@ const AIAssistant = () => {
 
   const processCommandLocally = (text) => {
     const lowerText = text.toLowerCase();
+    console.log('Processing command:', lowerText);
 
-    if (lowerText.includes('expense') || lowerText.includes('খরচ')) {
-      setAiResponse('Expense tracker খুলছি...');
+    // Navigation commands in Bangla and English
+    if (lowerText.includes('finance') || lowerText.includes('expense') || lowerText.includes('খরচ') || lowerText.includes('ব্যয়') || 
+        lowerText.includes('financial') || lowerText.includes('অর্থ') || lowerText.includes('টাকা') || lowerText.includes('option')) {
+      setAiResponse('Finance page খুলছি...');
       setTimeout(() => window.location.href = '/financial', 1000);
-    } else if (lowerText.includes('health') || lowerText.includes('স্বাস্থ্য')) {
+    } 
+    else if (lowerText.includes('health') || lowerText.includes('স্বাস্থ্য') || lowerText.includes('সুস্থ')) {
       setAiResponse('Health dashboard খুলছি...');
       setTimeout(() => window.location.href = '/health', 1000);
-    } else if (lowerText.includes('prayer') || lowerText.includes('নামাজ')) {
+    } 
+    else if (lowerText.includes('prayer') || lowerText.includes('নামাজ') || lowerText.includes('প্রেয়ার')) {
       setAiResponse('Prayer times দেখাচ্ছি...');
       setTimeout(() => window.location.href = '/prayer', 1000);
-    } else if (lowerText.includes('report') || lowerText.includes('রিপোর্ট')) {
+    } 
+    else if (lowerText.includes('report') || lowerText.includes('রিপোর্ট')) {
       setAiResponse('Report generator খুলছি...');
       setTimeout(() => window.location.href = '/reports', 1000);
-    } else {
-      setAiResponse('আমি আপনার কমান্ড বুঝতে পারিনি। আবার চেষ্টা করুন।');
+    }
+    else if (lowerText.includes('task') || lowerText.includes('কাজ') || lowerText.includes('টাস্ক')) {
+      setAiResponse('Task manager খুলছি...');
+      setTimeout(() => window.location.href = '/tasks', 1000);
+    }
+    else if (lowerText.includes('event') || lowerText.includes('ইভেন্ট') || lowerText.includes('অনুষ্ঠান')) {
+      setAiResponse('Event calendar খুলছি...');
+      setTimeout(() => window.location.href = '/events', 1000);
+    }
+    else if (lowerText.includes('gallery') || lowerText.includes('গ্যালারি') || lowerText.includes('ছবি')) {
+      setAiResponse('Photo gallery খুলছি...');
+      setTimeout(() => window.location.href = '/gallery', 1000);
+    }
+    else if (lowerText.includes('routine') || lowerText.includes('রুটিন') || lowerText.includes('সময়সূচী')) {
+      setAiResponse('Routine setup খুলছি...');
+      setTimeout(() => window.location.href = '/routine', 1000);
+    }
+    else if (lowerText.includes('weather') || lowerText.includes('আবহাওয়া') || lowerText.includes('ওয়েদার')) {
+      setAiResponse('Weather information খুলছি...');
+      setTimeout(() => window.location.href = '/weather', 1000);
+    }
+    else if (lowerText.includes('ai advice') || lowerText.includes('পরামর্শ') || lowerText.includes('এআই')) {
+      setAiResponse('AI advice page খুলছি...');
+      setTimeout(() => window.location.href = '/ai-advice', 1000);
+    }
+    else if (lowerText.includes('dashboard') || lowerText.includes('ড্যাশবোর্ড') || lowerText.includes('হোম')) {
+      setAiResponse('Dashboard খুলছি...');
+      setTimeout(() => window.location.href = '/', 1000);
+    }
+    // Scroll commands
+    else if (lowerText.includes('scroll up') || lowerText.includes('উপরে') || lowerText.includes('স্ক্রল আপ')) {
+      setAiResponse('পেজ উপরে স্ক্রল করছি...');
+      window.scrollBy({ top: -500, behavior: 'smooth' });
+    }
+    else if (lowerText.includes('scroll down') || lowerText.includes('নিচে') || lowerText.includes('স্ক্রল ডাউন')) {
+      setAiResponse('পেজ নিচে স্ক্রল করছি...');
+      window.scrollBy({ top: 500, behavior: 'smooth' });
+    }
+    else if (lowerText.includes('scroll top') || lowerText.includes('একদম উপরে') || lowerText.includes('শুরুতে')) {
+      setAiResponse('পেজের শুরুতে যাচ্ছি...');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    else if (lowerText.includes('scroll bottom') || lowerText.includes('একদম নিচে') || lowerText.includes('শেষে')) {
+      setAiResponse('পেজের শেষে যাচ্ছি...');
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+    // Form filling commands (will trigger modals if on the right page)
+    else if (lowerText.includes('add expense') || lowerText.includes('খরচ যোগ') || lowerText.includes('ব্যয় যোগ করো')) {
+      setAiResponse('Expense form খুলছি...');
+      // If on finance page, trigger the add expense modal
+      if (window.location.pathname === '/financial') {
+        setTimeout(() => {
+          const addButton = document.querySelector('[data-add-expense]');
+          if (addButton) addButton.click();
+        }, 500);
+      } else {
+        setTimeout(() => window.location.href = '/financial', 1000);
+      }
+    }
+    else if (lowerText.includes('add goal') || lowerText.includes('লক্ষ্য যোগ') || lowerText.includes('গোল যোগ করো')) {
+      setAiResponse('Goal form খুলছি...');
+      if (window.location.pathname === '/financial') {
+        setTimeout(() => {
+          const addGoalButton = document.querySelector('[data-add-goal]');
+          if (addGoalButton) addGoalButton.click();
+        }, 500);
+      } else {
+        setTimeout(() => window.location.href = '/financial', 1000);
+      }
+    }
+    else if (lowerText.includes('add income') || lowerText.includes('আয় যোগ') || lowerText.includes('ইনকাম যোগ করো')) {
+      setAiResponse('Income form খুলছি...');
+      if (window.location.pathname === '/financial') {
+        setTimeout(() => {
+          const addIncomeButton = document.querySelector('[data-add-income]');
+          if (addIncomeButton) addIncomeButton.click();
+        }, 500);
+      } else {
+        setTimeout(() => window.location.href = '/financial', 1000);
+      }
+    }
+    else if (lowerText.includes('add task') || lowerText.includes('কাজ যোগ') || lowerText.includes('টাস্ক যোগ করো')) {
+      setAiResponse('Task form খুলছি...');
+      if (window.location.pathname === '/tasks') {
+        setTimeout(() => {
+          const addTaskButton = document.querySelector('[data-add-task]');
+          if (addTaskButton) addTaskButton.click();
+        }, 500);
+      } else {
+        setTimeout(() => window.location.href = '/tasks', 1000);
+      }
+    }
+    else if (lowerText.includes('add event') || lowerText.includes('ইভেন্ট যোগ') || lowerText.includes('অনুষ্ঠান যোগ করো')) {
+      setAiResponse('Event form খুলছি...');
+      if (window.location.pathname === '/events') {
+        setTimeout(() => {
+          const addEventButton = document.querySelector('[data-add-event]');
+          if (addEventButton) addEventButton.click();
+        }, 500);
+      } else {
+        setTimeout(() => window.location.href = '/events', 1000);
+      }
+    }
+    // Page actions
+    else if (lowerText.includes('refresh') || lowerText.includes('রিফ্রেশ') || lowerText.includes('নতুন করে লোড')) {
+      setAiResponse('পেজ রিফ্রেশ করছি...');
+      setTimeout(() => window.location.reload(), 500);
+    }
+    else if (lowerText.includes('back') || lowerText.includes('পিছনে') || lowerText.includes('ব্যাক')) {
+      setAiResponse('পিছনের পেজে যাচ্ছি...');
+      setTimeout(() => window.history.back(), 500);
+    }
+    else if (lowerText.includes('close') || lowerText.includes('বন্ধ') || lowerText.includes('ক্লোজ')) {
+      setAiResponse('মডাল বন্ধ করছি...');
+      // Try to close any open modals
+      setTimeout(() => {
+        const closeButtons = document.querySelectorAll('[data-close-modal], .modal-close');
+        if (closeButtons.length > 0) {
+          closeButtons[0].click();
+        }
+      }, 500);
+    }
+    // Information commands
+    else if (lowerText.includes('show') || lowerText.includes('দেখাও') || lowerText.includes('প্রদর্শন')) {
+      if (lowerText.includes('balance') || lowerText.includes('ব্যালেন্স') || lowerText.includes('জমা')) {
+        setAiResponse('Balance information দেখাচ্ছি...');
+        // Will be shown if on finance page
+      } else if (lowerText.includes('chart') || lowerText.includes('চার্ট') || lowerText.includes('গ্রাফ')) {
+        setAiResponse('Charts দেখাচ্ছি...');
+        window.scrollTo({ top: 500, behavior: 'smooth' });
+      } else {
+        setAiResponse('তথ্য প্রদর্শন করছি...');
+      }
+    }
+    // Help command
+    else if (lowerText.includes('help') || lowerText.includes('সাহায্য') || lowerText.includes('হেল্প')) {
+      setAiResponse(`আপনি বলতে পারেন:
+      📊 "Financial page যাও" - আর্থিক পেজে যাবে
+      ❤️ "Health dashboard খোলো" - স্বাস্থ্য পেজে যাবে
+      🕌 "Prayer times দেখাও" - নামাজের সময় দেখাবে
+      ➕ "Add expense" - খরচ যোগ করার ফর্ম খুলবে
+      📈 "Scroll down" - পেজ নিচে স্ক্রল করবে
+      🔄 "Refresh page" - পেজ রিফ্রেশ করবে
+      এবং আরও অনেক কিছু...`);
+    }
+    else {
+      setAiResponse(`আমি আপনার কমান্ড "${text}" বুঝতে পারিনি। 
+      "Help" বলুন সাপোর্টেড কমান্ড দেখার জন্য।`);
     }
   };
 
@@ -282,7 +434,19 @@ const AIAssistant = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">🎤 Voice Command</h2>
-            <p className="text-gray-600 mb-6">বলুন: "Show expenses", "Open health dashboard", "Check prayer times"</p>
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg mb-6">
+              <p className="text-gray-700 font-semibold mb-2">বাংলায় বলুন (Examples):</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                <p>• "Finance option a jao" - আর্থিক পেজে যাবে</p>
+                <p>• "Page scroll koro" - পেজ স্ক্রল করবে</p>
+                <p>• "Add expense" - খরচ যোগ করবে</p>
+                <p>• "Health dashboard kholo" - স্বাস্থ্য দেখাবে</p>
+                <p>• "Namaz er somoy dekhao" - নামাজের সময়</p>
+                <p>• "Task jog koro" - টাস্ক যোগ করবে</p>
+                <p>• "Report generate koro" - রিপোর্ট তৈরি করবে</p>
+                <p>• "Refresh page" - পেজ রিফ্রেশ করবে</p>
+              </div>
+            </div>
 
             <div className="flex flex-col items-center gap-4">
               <button

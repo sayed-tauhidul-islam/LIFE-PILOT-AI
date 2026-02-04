@@ -4,7 +4,7 @@ import api from '../api';
 
 const ReportGenerator = () => {
   const [reportType, setReportType] = useState('finance'); // 'finance', 'health', 'tasks', 'overall'
-  const [dateRange, setDateRange] = useState('month'); // 'week', 'month', 'year', 'custom'
+  const [dateRange, setDateRange] = useState('month'); // 'day', 'week', 'month', 'year', 'custom'
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reportData, setReportData] = useState(null);
@@ -53,6 +53,9 @@ const ReportGenerator = () => {
     let filterDate = new Date();
 
     switch (dateRange) {
+      case 'day':
+        filterDate.setDate(now.getDate() - 1);
+        break;
       case 'week':
         filterDate.setDate(now.getDate() - 7);
         break;
@@ -378,6 +381,7 @@ const ReportGenerator = () => {
           <h2 className="text-xl font-bold text-gray-800 mb-4">সময়কাল নির্বাচন করুন</h2>
           <div className="flex flex-wrap gap-4 mb-4">
             {[
+              { value: 'day', label: '📅 Last Day' },
               { value: 'week', label: '📅 Last Week' },
               { value: 'month', label: '📅 Last Month' },
               { value: 'year', label: '📅 Last Year' },

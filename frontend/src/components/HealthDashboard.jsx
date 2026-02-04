@@ -53,24 +53,81 @@ const HealthDashboard = () => {
       ]);
       return;
     }
+
+    // Generate AI suggestions based on health data
+    const bmi = calculateBMI();
+    const bmiStatus = getBMIStatus(parseFloat(bmi));
+    const bpStatus = getBloodPressureStatus();
+    const suggestions = [];
+
+    // BMI-based suggestions
+    if (parseFloat(bmi) < 18.5) {
+      suggestions.push('⚖️ আপনার ওজন কম। পুষ্টিকর খাবার বেশি খান এবং ডাক্তারের পরামর্শ নিন');
+      suggestions.push('🥗 প্রতিদিন ৩-৪ বার পুষ্টিকর খাবার খান');
+    } else if (parseFloat(bmi) >= 25) {
+      suggestions.push('⚖️ আপনার ওজন বেশি। স্বাস্থ্যকর খাবার এবং নিয়মিত ব্যায়াম করুন');
+      suggestions.push('🏃 দিনে ৪৫-৬০ মিনিট ব্যায়াম করুন');
+      suggestions.push('🥗 তেল-চর্বি যুক্ত খাবার কম খান');
+    } else {
+      suggestions.push('✅ আপনার ওজন স্বাভাবিক। এই অবস্থা বজায় রাখুন');
+    }
+
+    // Blood pressure suggestions
+    if (data.bloodPressure && data.bloodPressure.systolic >= 140) {
+      suggestions.push('⚠️ উচ্চ রক্তচাপ। লবণ কম খান এবং ডাক্তারের পরামর্শ নিন');
+      suggestions.push('🧘 মানসিক চাপ কমাতে যোগব্যায়াম করুন');
+    }
+
+    // Heart rate suggestions
+    if (data.heartRate) {
+      const hr = parseInt(data.heartRate);
+      if (hr > 100) {
+        suggestions.push('💓 হৃদস্পন্দন বেশি। বিশ্রাম নিন এবং চিকিৎসকের পরামর্শ নিন');
+      } else if (hr < 60) {
+        suggestions.push('💓 হৃদস্পন্দন কম। নিয়মিত চেকআপ করুন');
+      }
+    }
+
+    // Blood sugar suggestions
+    if (data.bloodSugar) {
+      const bs = parseFloat(data.bloodSugar);
+      if (bs > 7) {
+        suggestions.push('🩸 রক্তে শর্করা বেশি। মিষ্টি খাবার এড়িয়ে চলুন');
+      } else if (bs < 4) {
+        suggestions.push('🩸 রক্তে শর্করা কম। নিয়মিত খাবার খান');
+      }
+    }
+
+    // Sleep suggestions
+    if (data.sleep) {
+      const sleep = parseInt(data.sleep);
+      if (sleep < 7) {
+        suggestions.push('😴 ঘুম কম হচ্ছে। প্রতিদিন ৭-৮ ঘন্টা ঘুমান');
+      } else if (sleep > 9) {
+        suggestions.push('😴 ঘুম বেশি হচ্ছে। ৮ ঘন্টার মধ্যে রাখার চেষ্টা করুন');
+      } else {
+        suggestions.push('😴 আপনার ঘুম ভালো হচ্ছে। এটি বজায় রাখুন');
+      }
+    }
+
+    // General health tips
+    suggestions.push('💧 প্রতিদিন ৮-১০ গ্লাস পানি পান করুন');
+    suggestions.push('🥗 সবজি এবং ফল বেশি খান');
     
+    setAiSuggestions(suggestions);
+    
+    // Try to get more suggestions from API
     try {
       const response = await api.post('/api/health/ai-suggestions', {
-        healthData,
+        healthData: data,
         conditions: healthConditions
       });
       
-      if (response.data.success) {
-        setAiSuggestions(response.data.suggestions || []);
+      if (response.data.success && response.data.suggestions) {
+        setAiSuggestions([...suggestions, ...response.data.suggestions]);
       }
     } catch (error) {
-      console.error('Error getting AI suggestions:', error);
-      setAiSuggestions([
-        '💧 প্রতিদিন কমপক্ষে ৮ গ্লাস পানি পান করুন',
-        '🏃 দিনে ৩০ মিনিট হাঁটুন',
-        '🥗 সুষম খাবার খান',
-        '😴 প্রতিদিন ৭-৮ ঘন্টা ঘুমান'
-      ]);
+      console.error('Error getting additional AI suggestions:', error);
     }
   };
 
