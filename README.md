@@ -1,538 +1,329 @@
-# 🚀 Life Pilot AI - আপনার স্মার্ট জীবন সহায়ক
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12">
+  <img src="https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2">
+  <img src="https://img.shields.io/badge/MongoDB-5.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
+  <img src="https://img.shields.io/badge/Gemini-Gemini--1.5-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini">
+  <img src="https://img.shields.io/badge/Vite-7.x-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
+</p>
 
-<div align="center">
+# 🚀 Life Pilot AI (LP_AI)
 
-![Life Pilot AI](https://img.shields.io/badge/Life_Pilot_AI-v2.0-red?style=for-the-badge)
-![React](https://img.shields.io/badge/React-18.3.1-blue?style=for-the-badge&logo=react)
-![Flask](https://img.shields.io/badge/Flask-3.0-green?style=for-the-badge&logo=flask)
-![MongoDB](https://img.shields.io/badge/MongoDB-Latest-brightgreen?style=for-the-badge&logo=mongodb)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+**আপনার ব্যক্তিগত AI-চালিত আর্থিক ও স্বাস্থ্য ব্যবস্থাপনা সিস্টেম**
 
-**আপনার দৈনন্দিন জীবনের সকল কাজ পরিচালনার জন্য AI-চালিত সম্পূর্ণ সমাধান**
-
-[ডেমো দেখুন](https://github.com/sayed-tauhidul-islam/LIFE-PILOT-AI) | [ডকুমেন্টেশন](#-features) | [ইনস্টলেশন](#-installation)
-
-</div>
-
----
-
-## 📋 বিষয়সূচী
-
-- [বৈশিষ্ট্য](#-বৈশিষ্টসমূহ)
-- [প্রযুক্তি স্ট্যাক](#-প্রযুক্তি-স্ট্যাক)
-- [ইনস্টলেশন](#-ইনস্টলেশন)
-- [ব্যবহার](#-ব্যবহার)
-- [API এন্ডপয়েন্ট](#-api-এনডপযনট)
-- [স্ক্রিনশট](#-সকরনশট)
-- [কন্ট্রিবিউশন](#-কনটরবউশন)
-- [লাইসেন্স](#-লইসনস)
+Life Pilot AI হলো একটি সম্পূর্ণ বাংলা ভাষায় নির্মিত ব্যক্তিগত অর্থ ও স্বাস্থ্য ব্যবস্থাপনা ওয়েব অ্যাপ্লিকেশন। এটি AI (কৃত্রিম বুদ্ধিমত্তা) ব্যবহার করে আপনার আয়-ব্যয় বিশ্লেষণ করে, বিভাগ অনুযায়ী বাজেট পরিকল্পনা তৈরি করে, ব্যক্তিগতকৃত খাদ্য পরিকল্পনা দেয় এবং আর্থিক স্বাস্থ্য স্কোর (FinScore™) প্রদান করে।
 
 ---
 
-## ✨ বৈশিষ্ট্যসমূহ
+## ✨ প্রধান বৈশিষ্ট্যসমূহ
 
-### 🕌 নামাজের সময়সূচী
+### 📊 আর্থিক ড্যাশবোর্ড
+- **রিয়েল-টাইম সারসংক্ষেপ** — আয়, খরচ, সঞ্চয় ও ব্যালেন্স এক নজরে
+- **ইন্টারেক্টিভ চার্ট** — Chart.js দ্বারা আয় বনাম খরচ লাইন চার্ট ও ক্যাটেগরি ডোনাট চার্ট
+- **পিরিয়ড সুইচার** — দৈনিক, সাপ্তাহিক, মাসিক ও বার্ষিক দৃশ্য
+- **FinScore™** — ০-১০০ স্কোরে আপনার আর্থিক স্বাস্থ্যের মূল্যায়ন (ক্যানভাস রিং)
 
-- 📍 **স্বয়ংক্রিয় অবস্থান সনাক্তকরণ** - GPS বা ম্যানুয়াল শহর নির্বাচন
-- ⏰ **রিয়েল-টাইম নামাজের সময়** - Aladhan API থেকে সঠিক সময়
-- 🌙 **পরবর্তী নামাজ হাইলাইট** - কাউন্টডাউন টাইমার সহ
-- 🗓️ **ইসলামিক ক্যালেন্ডার** - ৪টি ক্যালেন্ডার সিস্টেম একসাথে:
-  - 🇧🇩 বাংলা মাস (বৈশাখ, জ্যৈষ্ঠ, আষাঢ়...)
-  - 🇬🇧 ইংরেজি মাস (January, February...)
-  - 🕋 আরবি মাস (মহররম, সফর, রমজান...)
-  - 📅 বাংলা বর্ষ মাস (বৈশাখ থেকে চৈত্র)
-- 🎉 **সরকারি ছুটির তালিকা (২০২৬-২০৩০)** - সব ছুটি লাল রঙে
-- 🟢 **জুমার দিন হাইলাইট** - প্রতি শুক্রবার সবুজ রঙে
-- 🔵 **আজকের তারিখ** - নীল রঙে হাইলাইট
-- 💡 **হোভার টুলটিপ** - ছুটির নাম দেখুন
+### 🤖 AI আর্থিক উপদেষ্টা
+- **বিভাগ অনুযায়ী বাজেট পরিকল্পনা** — বাসা ভাড়া, খাবার, যাতায়াত, চিকিৎসা, বিনোদন সহ প্রতিটি খাতে কত টাকা খরচ করা উচিত তার সুপারিশ
+- **৫০/৩০/২০ নিয়ম** — প্রয়োজন, ইচ্ছা ও সঞ্চয়ের ভারসাম্যপূর্ণ বরাদ্দ
+- **প্রকৃত বনাম সুপারিশকৃত তুলনা** — প্রতিটি খাতে আপনি কত খরচ করছেন বনাম কত করা উচিত
+- **স্মার্ট টিপস** — প্রসঙ্গ-সচেতন আর্থিক পরামর্শ (১০+ ক্যাটেগরি বিশ্লেষণ)
+- **ব্যয় অসামঞ্জস্য সনাক্তকরণ** — অস্বাভাবিক খরচ প্যাটার্ন শনাক্ত করে সতর্ক করে
+- **বিনিয়োগ পরামর্শ** — সঞ্চয় হার অনুযায়ী বিনিয়োগ সুপারিশ
+- **দৈনিক ব্যয় সীমা** — আয় ও সঞ্চয় লক্ষ্য বিবেচনায় দৈনিক খরচের সীমা নির্ধারণ
+- **Gemini সাপোর্ট** — বৈধ API কী থাকলে Gemini ব্যবহার করে, অন্যথায় স্মার্ট লোকাল AI ইঞ্জিন কাজ করে
 
-### 💰 আর্থিক ব্যবস্থাপনা
+### 💰 লেনদেন ব্যবস্থাপনা
+- আয়, খরচ ও সঞ্চয় — তিন ধরনের লেনদেন
+- **১৫টি খরচ বিভাগ** — খাবার, ভাড়া, যাতায়াত, স্বাস্থ্যসেবা, শিক্ষা, বিনোদন ইত্যাদি
+- **৮টি আয় বিভাগ** — বেতন, ফ্রিল্যান্স, ব্যবসা, বিনিয়োগ আয় ইত্যাদি
+- ফিল্টারিং ও সার্চ — তারিখ, ধরন, বিভাগ অনুযায়ী ফিল্টার
 
-- 💳 **খরচ ট্র্যাকিং** - Daily, Weekly, Monthly, Yearly
-- 📊 **AI-চালিত বাজেট পরামর্শ** - স্মার্ট সঞ্চয় টিপস
-- 🎯 **আর্থিক লক্ষ্য** - Add, Edit, Delete সহ প্রগতি ট্র্যাকিং
-- 📈 **বিনিয়োগ পরামর্শক** - রিস্ক প্রোফাইল অনুযায়ী
-- 💹 **মাসিক আয় ব্যবস্থাপনা** - সেভিংস রেট গণনা
-- 🎨 **সুন্দর ক্যাটাগরি আইকন** - 10+ ক্যাটাগরি (🍔 Food, 🚗 Transport...)
-- 📊 **ইন্টারেক্টিভ চার্ট** - Recharts দিয়ে ডেটা ভিজুয়ালাইজেশন
-- 🔄 **রিয়েল-টাইম আপডেট** - MongoDB তে সংরক্ষণ
+### 📋 বাজেট পরিচালনা
+- বিভাগ অনুযায়ী বাজেট সীমা নির্ধারণ
+- রিয়েল-টাইম প্রগ্রেস বার — কত শতাংশ খরচ হয়েছে
+- সীমা অতিক্রমের সতর্কতা
 
-### 🌤️ আবহাওয়া পূর্বাভাস
+### 🍽️ AI খাদ্য পরিকল্পনা
+- **ব্যক্তিগতকৃত মিল প্ল্যান** — সকালের নাস্তা, দুপুর, রাত ও স্ন্যাকস
+- **৫টি ডায়েট ভ্যারিয়েশন** — নিরামিষ, ওজন বৃদ্ধি, ওজন কমানো, হালাল, সাধারণ
+- ক্যালোরি হিসাব, পুষ্টি উপাদান ও খরচের অনুমান
+- BMI ক্যাটেগরি ও দৈনিক ক্যালোরি লক্ষ্য
 
-- 🌍 **যেকোনো শহরের আবহাওয়া** - ম্যানুয়াল লোকেশন সিলেক্ট
-- 📅 **৭ দিনের পূর্বাভাস** - তাপমাত্রা, বাতাস, আর্দ্রতা
-- 🔄 **লাইভ আপডেট** - Meteoblue API ইন্টিগ্রেশন
-- 💾 **ডাটাবেজে সংরক্ষণ** - পছন্দের লোকেশন সেভ
+### 💊 স্বাস্থ্য প্রোফাইল
+- BMI ক্যালকুলেটর ও ক্যাটেগরি (কম ওজন, স্বাভাবিক, অতিরিক্ত ওজন, স্থূল)
+- কার্যকলাপের মাত্রা অনুযায়ী দৈনিক ক্যালোরি সুপারিশ
+- খাদ্যতালিকা পছন্দ (হালাল, নিরামিষ, কিটো ইত্যাদি)
+- স্বাস্থ্য সমস্যা ট্র্যাকিং (ডায়াবেটিস, উচ্চ রক্তচাপ ইত্যাদি)
+- স্বাস্থ্য লক্ষ্য নির্ধারণ
 
-### 🤖 AI উপদেষ্টা
-
-- 📝 **দৈনিক পরামর্শ** - ব্যক্তিগত টিপস এবং রিমাইন্ডার
-- 📊 **খরচ বিশ্লেষণ** - AI-চালিত সঞ্চয় সুপারিশ
-- 🎯 **রুটিন তৈরি** - ছাত্র, পেশাদার, পরিবার অনুযায়ী
-- 💡 **স্মার্ট সাজেশন** - আপনার ডেটা অনুযায়ী
-- 📈 **খরচ পূর্বাভাস** - ML-based পরবর্তী মাসের খরচ
-- 🎯 **হেলথ স্কোর** - জীবন ব্যবস্থাপনা স্কোর (0-100)
-
-### 📁 ফাইল ম্যানেজমেন্ট
-
-- 📤 **ফাইল আপলোড** - PDF, Excel, Word, Images, CSV
-- 🔍 **অনুসন্ধান ও ফিল্টার** - নাম, ধরন, তারিখ অনুযায়ী
-- ✏️ **সম্পাদনা ও ডিলিট** - সম্পূর্ণ CRUD অপারেশন
-- 💾 **GridFS স্টোরেজ** - MongoDB তে নিরাপদ সংরক্ষণ
-- 📊 **ফাইল স্ট্যাটিস্টিক্স** - টোটাল সাইজ এবং কাউন্ট
-
-### 🎨 থিম সিস্টেম
-
-- 🌞 **Light Theme** - দিনের জন্য
-- 🌙 **Dark Theme** - রাতের জন্য
-- 💙 **Blue Theme** - স্টাইলিশ ডিজাইন
-- 🔄 **সহজ সুইচিং** - একক ক্লিকে পরিবর্তন
-- 💾 **থিম পারসিস্টেন্স** - localStorage তে সংরক্ষণ
+### 📈 রিপোর্ট ও পূর্বাভাস
+- **মাসিক ও বার্ষিক রিপোর্ট** — আয়-ব্যয়ের বিস্তারিত বিশ্লেষণ
+- **৩ মাসের খরচ পূর্বাভাস** — লিনিয়ার রিগ্রেশন ভিত্তিক ভবিষ্যদ্বাণী
+- **PDF ও Excel এক্সপোর্ট** — রিপোর্ট ডাউনলোড (DomPDF ও Maatwebsite/Excel)
+- বিভাগ অনুযায়ী খরচের ব্রেকডাউন
 
 ---
 
 ## 🛠️ প্রযুক্তি স্ট্যাক
 
-### Frontend
+| প্রযুক্তি | বিবরণ |
+|---|---|
+| **Backend** | Laravel 12 (PHP 8.2) |
+| **Database** | MongoDB 5.x+ (mongodb/laravel-mongodb) |
+| **AI Engine** | Gemini 1.5 + Local Rule-based Fallback |
+| **Frontend** | Blade Templates + Vanilla JS |
+| **Charts** | Chart.js 4.x |
+| **Icons** | Font Awesome 6.5 |
+| **Font** | Inter (Google Fonts) |
+| **Build Tool** | Vite 7.x |
+| **PDF Export** | barryvdh/laravel-dompdf |
+| **Excel Export** | maatwebsite/excel |
+| **Broadcasting** | Pusher (optional) |
+| **Language** | সম্পূর্ণ বাংলা UI |
 
-```javascript
-⚛️ React 18.3.1        // Modern UI Framework
-🎨 Tailwind CSS        // Utility-first CSS
-📊 Recharts            // Data Visualization
-🔷 Lucide React        // Beautiful Icons
-📡 Axios               // HTTP Client
-🎯 Vite                // Build Tool
-```
+---
 
-### Backend
-
-```python
-🐍 Python 3.8+         // Programming Language
-🌶️ Flask 3.0          // Web Framework
-🍃 MongoDB             // NoSQL Database
-🔐 Flask-CORS          // Cross-Origin Support
-📦 GridFS              // File Storage
-🔢 NumPy               // Numerical Computing
-📊 Pandas              // Data Analysis
-🤖 Scikit-learn        // Machine Learning
-```
-
-### APIs & Services
+## 📁 প্রজেক্ট স্ট্রাকচার
 
 ```
-🕌 Aladhan API         // Prayer Times
-🌍 OpenStreetMap       // Geocoding
-🌤️ Meteoblue          // Weather Data
-🗺️ Nominatim          // Location Services
+LP_AI/
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── AuthController.php          # রেজিস্ট্রেশন ও লগইন
+│   │   ├── DashboardController.php     # ড্যাশবোর্ড ডেটা
+│   │   ├── TransactionController.php   # আয়-ব্যয় CRUD
+│   │   ├── BudgetController.php        # বাজেট ব্যবস্থাপনা
+│   │   ├── AIController.php            # AI বিশ্লেষণ
+│   │   ├── HealthController.php        # স্বাস্থ্য প্রোফাইল
+│   │   └── ReportController.php        # রিপোর্ট ও এক্সপোর্ট
+│   ├── Models/
+│   │   ├── User.php                    # ব্যবহারকারী মডেল
+│   │   ├── Transaction.php             # লেনদেন মডেল (১৫+ ক্যাটেগরি)
+│   │   ├── Budget.php                  # বাজেট মডেল
+│   │   ├── AISuggestion.php            # AI সাজেশন মডেল
+│   │   ├── HealthProfile.php           # স্বাস্থ্য প্রোফাইল
+│   │   └── Report.php                  # রিপোর্ট মডেল
+│   ├── Services/
+│   │   ├── AIService.php               # AI ইঞ্জিন (Budget Plan + Tips + Meal Plan)
+│   │   └── FinanceService.php          # আর্থিক গণনা ও পরিসংখ্যান
+│   └── ...
+├── resources/views/
+│   ├── layouts/app.blade.php           # মেইন লেআউট (সাইডবার, CSS)
+│   ├── dashboard/index.blade.php       # আর্থিক ড্যাশবোর্ড
+│   ├── transactions/                   # লেনদেন পৃষ্ঠা
+│   ├── budget/                         # বাজেট পৃষ্ঠা
+│   ├── ai/index.blade.php             # AI উপদেষ্টা পৃষ্ঠা
+│   ├── health/index.blade.php         # স্বাস্থ্য প্রোফাইল
+│   ├── reports/                        # রিপোর্ট পৃষ্ঠা
+│   └── auth/                           # লগইন/রেজিস্ট্রেশন
+├── routes/web.php                      # সকল রাউট
+├── config/                             # কনফিগারেশন
+└── ...
 ```
 
 ---
 
-## 📦 ইনস্টলেশন
+## ⚡ ইনস্টলেশন
 
 ### পূর্বশর্ত
+- PHP >= 8.2
+- Composer
+- Node.js >= 18 ও npm
+- MongoDB 5.x+ (চালু থাকতে হবে)
+- PHP MongoDB Extension (`php_mongodb.dll`)
 
-- Node.js (v16 অথবা উপরে)
-- Python 3.8+
-- MongoDB (লোকাল বা ক্লাউড)
-- Git
-
-### ধাপ ১: রিপোজিটরি ক্লোন করুন
+### ধাপসমূহ
 
 ```bash
-git clone https://github.com/sayed-tauhidul-islam/LIFE-PILOT-AI.git
-cd LIFE-PILOT-AI/LP-AI-Agent
+# ১. রিপোজিটরি ক্লোন করুন
+git clone https://github.com/sayed-tauhidul-islam/LP_AI.git
+cd LP_AI
+
+# ২. PHP ডিপেন্ডেন্সি ইন্সটল করুন
+composer install
+
+# ৩. Node.js ডিপেন্ডেন্সি ইন্সটল করুন
+npm install
+
+# ৪. Environment ফাইল কপি ও কনফিগার করুন
+cp .env.example .env
+php artisan key:generate
 ```
 
-### ধাপ ২: Frontend সেটআপ
+### `.env` কনফিগারেশন
+
+```env
+# ডাটাবেজ (MongoDB)
+DB_CONNECTION=mongodb
+DB_HOST=127.0.0.1
+DB_PORT=27017
+DB_DATABASE=LP_AI
+
+# Gemini (ঐচ্ছিক — না থাকলে Local AI কাজ করবে)
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-1.5-flash
+GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+
+# Broadcasting (ঐচ্ছিক)
+BROADCAST_CONNECTION=log
+```
+
+### সার্ভার চালু করুন
 
 ```bash
-cd frontend
-npm install
+# টার্মিনাল ১ — Laravel সার্ভার
+php artisan serve
+
+# টার্মিনাল ২ — Vite (ফ্রন্টএন্ড)
 npm run dev
 ```
 
-Frontend চলবে: `http://localhost:3000`
+এরপর ব্রাউজারে যান: **http://localhost:8000**
 
-### ধাপ ৩: Backend সেটআপ
+---
 
-```bash
-cd backend
-python -m venv venv
+## 🎯 ব্যবহার নির্দেশিকা
 
-# Windows
-venv\Scripts\activate
+### ১. 📝 রেজিস্ট্রেশন ও লগইন
+- নাম, ইমেইল, পাসওয়ার্ড দিয়ে অ্যাকাউন্ট তৈরি করুন
+- বয়স, লিঙ্গ, মুদ্রা (BDT/USD) ও মাসিক আয় সেট করুন
 
-# Mac/Linux
-source venv/bin/activate
+### ২. 💳 লেনদেন যোগ করুন
+- আয়, খরচ বা সঞ্চয় ধরন নির্বাচন করুন
+- বিভাগ, পরিমাণ, তারিখ ও বিবরণ লিখুন
+- যত বেশি লেনদেন, AI তত ভালো পরামর্শ দেবে
 
-pip install -r requirements.txt
-python app.py
+### ৩. 🤖 AI বিশ্লেষণ পান
+- ড্যাশবোর্ডে "এআই রিফ্রেশ" বাটনে ক্লিক করুন
+- বিভাগ অনুযায়ী বাজেট পরিকল্পনা দেখুন
+- প্রতিটি খাতে সুপারিশকৃত বনাম প্রকৃত খরচ তুলনা করুন
+- সঞ্চয়ের পরিমাণ ও কৌশল জানুন
+- `AI সেটিংস` পেজ থেকে Gemini বা Local fallback নির্বাচন করুন
+
+### ৪. 📋 বাজেট সেট করুন
+- প্রতিটি বিভাগের জন্য মাসিক সীমা নির্ধারণ করুন
+- ড্যাশবোর্ডে প্রগ্রেস বার দেখুন
+
+### ৫. 💊 স্বাস্থ্য প্রোফাইল
+- উচ্চতা, ওজন, কার্যকলাপের মাত্রা দিন
+- AI ব্যক্তিগতকৃত খাদ্য পরিকল্পনা তৈরি করবে
+
+### ৬. 📈 রিপোর্ট
+- মাসিক ও বার্ষিক রিপোর্ট দেখুন
+- PDF বা Excel এ ডাউনলোড করুন
+- ৩ মাসের খরচ পূর্বাভাস দেখুন
+
+---
+
+## 🧠 AI ইঞ্জিন কীভাবে কাজ করে
+
+Life Pilot AI দুটি মোডে কাজ করে:
+
+### 🔑 Gemini মোড
+বৈধ Gemini API কী থাকলে, Gemini ব্যবহার করে গভীর আর্থিক বিশ্লেষণ প্রদান করে।
+
+### 🏠 লোকাল AI মোড (কোনো API প্রয়োজন নেই)
+API কী ছাড়াই একটি স্মার্ট রুল-বেজড ইঞ্জিন কাজ করে যা:
+
+- **৫০/৩০/২০ নিয়ম** অনুসরণ করে বাজেট বরাদ্দ করে
+- **১০+ বিভাগে** মাসিক সুপারিশ তৈরি করে
+- **প্রকৃত খরচ বিশ্লেষণ** করে সুপারিশের সাথে তুলনা করে
+- **FinScore™** গণনা করে (সঞ্চয় হার, ব্যয়-আয় অনুপাত, বৈচিত্র্য ইত্যাদি)
+- **অসামঞ্জস্য সনাক্ত** করে (গড়ের ২.৫ গুণের বেশি খরচ)
+- **বিনিয়োগ পরামর্শ** দেয় আর্থিক অবস্থার উপর ভিত্তি করে
+- **ব্যক্তিগতকৃত খাদ্য পরিকল্পনা** তৈরি করে (৫টি ডায়েট ভ্যারিয়েশন)
+
+---
+
+## 🗄️ ডাটাবেজ মডেল
+
 ```
+Users
+├── name, email, password
+├── age, gender, currency (BDT/USD)
+├── monthly_income
+└── timestamps
 
-Backend চলবে: `http://localhost:5000`
+Transactions
+├── user_id, type (income/expense/saving)
+├── category, amount, date
+├── description
+└── timestamps
 
-### ধাপ ৪: MongoDB সেটআপ
+AISuggestions
+├── user_id, type, fin_score
+├── daily_limit, tips[], anomalies[]
+├── suggestion_data (budget_plan, financial_health_summary, ...)
+├── meal_plan, model_used, tokens_used
+└── generated_at
 
-#### লোকাল MongoDB
+HealthProfiles
+├── user_id, age, gender
+├── height_cm, weight_kg, bmi
+├── activity_level, dietary_preferences[]
+├── health_conditions[], health_goals[]
+├── daily_food_budget
+└── timestamps
 
-```bash
-# MongoDB ইনস্টল করুন
-# https://www.mongodb.com/try/download/community
-
-# MongoDB সার্ভিস চালু করুন
-# Windows: Services থেকে MongoDB চালু করুন
-# Mac/Linux: mongod
-
-# ডাটাবেস ইনিশিয়ালাইজ করুন
-mongosh < database/mongodb_init.js
-```
-
-#### MongoDB Atlas (ক্লাউড)
-
-1. [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) এ একাউন্ট তৈরি করুন
-2. একটি ক্লাস্টার তৈরি করুন
-3. Connection string কপি করুন
-4. Backend `.env` ফাইলে যোগ করুন
-
-### ধাপ ৫: Environment Variables
-
-Backend এ `.env` ফাইল তৈরি করুন:
-
-```env
-MONGODB_URI=mongodb://localhost:27017/
-DATABASE_NAME=lifepilot_ai
-FLASK_PORT=5000
-WEATHER_API_KEY=your_api_key_here
+Budgets
+├── user_id, category, limit_amount
+├── period, is_active
+└── timestamps
 ```
 
 ---
 
-## 🚀 ব্যবহার
+## 🛣️ API রাউটসমূহ
 
-### প্রথম ব্যবহার
-
-1. **ব্রাউজারে খুলুন**: `http://localhost:3000`
-2. **প্রোফাইল তৈরি**: নাম, বয়স, আয় দিন
-3. **নামাজের সময়**: শহর সিলেক্ট করুন
-4. **খরচ যোগ**: Daily Cost Tracker বা Expense Tracker ব্যবহার করুন
-5. **আর্থিক লক্ষ্য**: Goals সেট করুন এবং ট্র্যাক করুন
-
-### নামাজের সময় ব্যবহার
-
-```
-1. Prayer Times পেজে যান
-2. "পরিবর্তন" বাটনে ক্লিক করুন
-3. আপনার শহরের নাম লিখুন (যেমন: ঢাকা, চট্টগ্রাম)
-4. "সংরক্ষণ করুন" ক্লিক করুন
-5. স্বয়ংক্রিয়ভাবে নামাজের সময় আপডেট হবে
-```
-
-### ক্যালেন্ডার ব্যবহার
-
-```
-1. তীর বাটন দিয়ে মাস পরিবর্তন করুন
-2. লাল তারিখে হোভার করে ছুটির নাম দেখুন
-3. সবুজ = জুমা, নীল = আজ, লাল = ছুটি
-4. ২০২৫-২০৩০ সালের যেকোনো মাস দেখুন
-5. ৪টি মাস সিস্টেম দেখুন (বাংলা, ইংরেজি, বর্ষ, আরবি)
-```
-
-### খরচ ট্র্যাকিং
-
-```
-1. Financial পেজে যান
-2. Daily Cost Tracker সিলেক্ট করুন
-3. Category, Amount, Frequency সিলেক্ট করুন
-4. Add Expense ক্লিক করুন
-5. ড্যাশবোর্ডে সব ডেটা দেখুন
-```
-
----
-
-## 🔌 API এন্ডপয়েন্ট
-
-### Authentication
-
-```http
-POST   /api/auth/register          # নতুন ইউজার রেজিস্ট্রেশন
-POST   /api/auth/login              # ইউজার লগইন
-POST   /api/auth/logout             # ইউজার লগআউট
-```
-
-### Finance Management
-
-```http
-GET    /api/finance/profile         # ফাইন্যান্স প্রোফাইল
-POST   /api/finance/profile         # আয় আপডেট
-GET    /api/finance/expenses        # খরচ তালিকা
-POST   /api/finance/expense         # নতুন খরচ যোগ
-DELETE /api/finance/expense/:id    # খরচ ডিলিট
-GET    /api/finance/goals           # আর্থিক লক্ষ্য
-POST   /api/finance/goal            # লক্ষ্য যোগ
-PUT    /api/finance/goal/:id        # লক্ষ্য আপডেট
-DELETE /api/finance/goal/:id        # লক্ষ্য ডিলিট
-GET    /api/finance/daily-expenses  # দৈনিক খরচ
-POST   /api/finance/daily-expense   # দৈনিক খরচ যোগ
-```
-
-### Prayer Times
-
-```http
-GET    /api/prayer-times            # নামাজের সময় (lat, lon প্যারামিটার)
-GET    /api/user/location           # ইউজার লোকেশন
-POST   /api/user/location           # লোকেশন সেভ
-```
-
-### AI & Analysis
-
-```http
-POST   /api/finance/ai-suggestions  # AI সুপারিশ
-POST   /api/finance/budget-recommendation # বাজেট পরামর্শ
-POST   /api/finance/investment-advice     # বিনিয়োগ পরামর্শ
-GET    /api/analysis/comprehensive        # সম্পূর্ণ বিশ্লেষণ
-GET    /api/analysis/spending             # খরচ প্যাটার্ন
-GET    /api/analysis/predict-expenses     # খরচ পূর্বাভাস
-```
-
-### File Management
-
-```http
-POST   /api/files/upload            # ফাইল আপলোড
-GET    /api/files/search            # ফাইল খুঁজুন
-GET    /api/files/list              # ফাইল তালিকা
-GET    /api/files/download/:id      # ফাইল ডাউনলোড
-DELETE /api/files/:id               # ফাইল ডিলিট
-PUT    /api/files/:id               # ফাইল আপডেট
-GET    /api/files/statistics        # ফাইল স্ট্যাটিস্টিক্স
-```
+| মেথড | রাউট | বিবরণ |
+|---|---|---|
+| `GET` | `/dashboard` | আর্থিক ড্যাশবোর্ড |
+| `GET` | `/transactions` | লেনদেন তালিকা |
+| `POST` | `/transactions` | নতুন লেনদেন |
+| `GET` | `/budget` | বাজেট ব্যবস্থাপনা |
+| `GET` | `/ai` | AI উপদেষ্টা পৃষ্ঠা |
+| `POST` | `/ai/generate` | AI বিশ্লেষণ তৈরি |
+| `GET` | `/health` | স্বাস্থ্য প্রোফাইল |
+| `GET` | `/health/meal-plan` | AI খাদ্য পরিকল্পনা |
+| `GET` | `/reports` | রিপোর্ট ও পূর্বাভাস |
+| `GET` | `/reports/export/pdf/{period}` | PDF এক্সপোর্ট |
+| `GET` | `/reports/export/excel/{period}` | Excel এক্সপোর্ট |
 
 ---
 
 ## 📸 স্ক্রিনশট
 
-### হোম ড্যাশবোর্ড
-
-```
-┌─────────────────────────────────────────┐
-│  Life Pilot AI - Your Smart Assistant   │
-├─────────────────────────────────────────┤
-│  ⚡ AI Advice  |  🌤️ Weather  |  🕌 Prayer │
-│  💰 Financial |  📅 Routine  |  ✅ Tasks  │
-└─────────────────────────────────────────┘
-```
-
-### নামাজের সময়সূচী
-
-```
-┌──────────────────┬──────────────────────┐
-│ Prayer Times     │  Islamic Calendar    │
-│ ফজর    05:45    │  📅 বৈশাখ ২৫        │
-│ জোহর   12:30    │  January 2026        │
-│ আসর    15:45    │  মহররম ১৪৪৭        │
-│ মাগরিব 18:15    │  [Calendar Grid]     │
-│ এশা    19:45    │                      │
-└──────────────────┴──────────────────────┘
-```
-
-### ফাইন্যান্স ড্যাশবোর্ড
-
-```
-┌─────────┬─────────┬─────────┬─────────┐
-│ Income  │ Expense │ Savings │  Rate   │
-│ ৳20,000 │ ৳15,000 │ ৳5,000  │  25%    │
-└─────────┴─────────┴─────────┴─────────┘
-```
+> ড্যাশবোর্ড, AI উপদেষ্টা, স্বাস্থ্য প্রোফাইল ও রিপোর্ট পৃষ্ঠার স্ক্রিনশট যোগ করতে `screenshots/` ফোল্ডারে ছবি রাখুন।
 
 ---
 
-## 🗂️ প্রজেক্ট স্ট্রাকচার
+## 🤝 অবদান
 
-```
-LP-AI-Agent/
-│
-├── frontend/                  # React Frontend
-│   ├── src/
-│   │   ├── components/       # Reusable Components
-│   │   │   ├── PrayerTimes.jsx
-│   │   │   ├── IslamicCalendar.jsx
-│   │   │   ├── FinanceDashboard.jsx
-│   │   │   ├── ExpenseTracker.jsx
-│   │   │   ├── DailyCostTracker.jsx
-│   │   │   ├── BudgetPlanner.jsx
-│   │   │   ├── InvestmentAdvisor.jsx
-│   │   │   ├── FileManager.jsx
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── Footer.jsx
-│   │   │   └── ...
-│   │   ├── pages/            # Page Components
-│   │   │   ├── HomePage.jsx
-│   │   │   ├── PrayerPage.jsx
-│   │   │   ├── FinancialPage.jsx
-│   │   │   ├── WeatherPage.jsx
-│   │   │   ├── AIAdvicePage.jsx
-│   │   │   ├── TasksPage.jsx
-│   │   │   ├── RoutinePage.jsx
-│   │   │   └── SettingsPage.jsx
-│   │   ├── api/              # API Client
-│   │   │   └── index.js
-│   │   ├── App.jsx           # Main App
-│   │   ├── main.jsx
-│   │   └── index.css
-│   ├── package.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
-│
-├── backend/                   # Flask Backend
-│   ├── app.py                # Main Application
-│   ├── database.py           # MongoDB Operations
-│   ├── ai_advisor.py         # AI Logic
-│   ├── finance_manager.py    # Finance AI
-│   ├── auth_manager.py       # Authentication
-│   ├── data_analyzer.py      # Data Analysis
-│   ├── file_manager.py       # File Management
-│   ├── synthetic_data_generator.py
-│   ├── requirements.txt
-│   └── data/                 # Sample Data
-│       ├── personal_finance_data.csv
-│       ├── transaction_data.csv
-│       ├── investment_data.csv
-│       └── financial_goals_data.csv
-│
-├── database/                  # Database Scripts
-│   ├── mongodb_init.js       # DB Initialization
-│   ├── seed_data.js          # Sample Data
-│   ├── schemas.py            # Data Schemas
-│   └── README.md
-│
-├── README.md                  # This File
-├── QUICK-START.md            # Quick Start Guide
-├── FEATURES.md               # Detailed Features
-├── ARCHITECTURE.md           # System Architecture
-└── AI-ANALYSIS.md            # AI Documentation
-```
+এই প্রজেক্টে অবদান রাখতে চাইলে:
+
+1. রিপোজিটরি ফর্ক করুন
+2. একটি নতুন ব্রাঞ্চ তৈরি করুন (`git checkout -b feature/new-feature`)
+3. পরিবর্তন করুন ও কমিট করুন (`git commit -m 'Add new feature'`)
+4. ব্রাঞ্চে পুশ করুন (`git push origin feature/new-feature`)
+5. Pull Request তৈরি করুন
 
 ---
 
-## 🔐 নিরাপত্তা বৈশিষ্ট্য
-
-- ✅ **Password Hashing** - Werkzeug দিয়ে এনক্রিপ্ট
-- ✅ **CORS Protection** - Flask-CORS দিয়ে সুরক্ষিত
-- ✅ **Input Validation** - সব ইনপুট যাচাই করা হয়
-- ✅ **File Type Check** - শুধু নিরাপদ ফাইল টাইপ
-- ✅ **MongoDB Injection Protection** - Parameterized queries
-- ✅ **User Data Isolation** - প্রতি ইউজারের আলাদা ডেটা
-- ✅ **Session Management** - নিরাপদ সেশন হ্যান্ডলিং
-- ✅ **API Rate Limiting** - অপব্যবহার প্রতিরোধ
-
----
-
-## 🤝 কন্ট্রিবিউশন
-
-আমরা কন্ট্রিবিউশন স্বাগত জানাই! এভাবে শুরু করুন:
-
-1. **Fork** করুন প্রজেক্টটি
-2. **Branch** তৈরি করুন (`git checkout -b feature/AmazingFeature`)
-3. **Commit** করুন পরিবর্তন (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** করুন Branch এ (`git push origin feature/AmazingFeature`)
-5. **Pull Request** খুলুন
-
-### কন্ট্রিবিউশন গাইডলাইন
-
-- কোড ক্লিন এবং ডকুমেন্টেড রাখুন
-- Commit messages পরিষ্কার লিখুন
-- নতুন ফিচারের জন্য টেস্ট যোগ করুন
-- README আপডেট করুন যদি প্রয়োজন হয়
-- কোড স্ট্যান্ডার্ড অনুসরণ করুন
-
----
-
-## 📝 লাইসেন্স
-
-এই প্রজেক্ট MIT License এর অধীনে লাইসেন্সকৃত। বিস্তারিত দেখুন [LICENSE](LICENSE) ফাইলে।
-
----
-
-## 👥 ডেভেলপার
+## 👨‍💻 ডেভেলপার
 
 **Sayed Tauhidul Islam**
 
 - GitHub: [@sayed-tauhidul-islam](https://github.com/sayed-tauhidul-islam)
-- Repository: [LIFE-PILOT-AI](https://github.com/sayed-tauhidul-islam/LIFE-PILOT-AI)
 
 ---
 
-## 🙏 কৃতজ্ঞতা
+## 📄 লাইসেন্স
 
-- [Aladhan API](http://api.aladhan.com/) - নামাজের সময়ের জন্য
-- [Meteoblue](https://www.meteoblue.com/) - আবহাওয়া ডেটার জন্য
-- [OpenStreetMap](https://www.openstreetmap.org/) - জিওকোডিংয়ের জন্য
-- [MongoDB](https://www.mongodb.com/) - ডাটাবেস সমাধানের জন্য
-- [React](https://react.dev/) - UI ফ্রেমওয়ার্কের জন্য
-- [Flask](https://flask.palletsprojects.com/) - ব্যাকএন্ড ফ্রেমওয়ার্কের জন্য
-- [Tailwind CSS](https://tailwindcss.com/) - স্টাইলিং ফ্রেমওয়ার্কের জন্য
-- [Lucide React](https://lucide.dev/) - আইকন লাইব্রেরির জন্য
+এই প্রজেক্টটি [MIT License](LICENSE) এর অধীনে লাইসেন্সকৃত।
 
 ---
 
-## 📞 সাপোর্ট
-
-সমস্যা বা প্রশ্ন? নিচের উপায়ে যোগাযোগ করুন:
-
-- 🐛 **Bug Report**: [GitHub Issues](https://github.com/sayed-tauhidul-islam/LIFE-PILOT-AI/issues)
-- 💬 **Discussion**: [GitHub Discussions](https://github.com/sayed-tauhidul-islam/LIFE-PILOT-AI/discussions)
-- 📧 **Email**: Contact through GitHub profile
-
----
-
-## 🗺️ রোডম্যাপ
-
-### সম্পন্ন ✅
-
-- [x] নামাজের সময় সিস্টেম
-- [x] ইসলামিক ক্যালেন্ডার (৪টি সিস্টেম)
-- [x] আর্থিক ব্যবস্থাপনা (সম্পূর্ণ)
-- [x] আবহাওয়া পূর্বাভাস
-- [x] AI পরামর্শক
-- [x] ফাইল ম্যানেজমেন্ট
-- [x] থিম সিস্টেম
-- [x] ডেটা পারসিস্টেন্স
-- [x] ব্যাংলা লোকালাইজেশন
-
-### আসছে শীঘ্রই 🚀
-
-- [ ] মোবাইল অ্যাপ (React Native)
-- [ ] পুশ নোটিফিকেশন
-- [ ] মাল্টি-ল্যাঙ্গুয়েজ সাপোর্ট (ইংরেজি, আরবি)
-- [ ] ভয়েস কমান্ড
-- [ ] সোশ্যাল শেয়ারিং
-- [ ] ডেটা এক্সপোর্ট (PDF, Excel)
-- [ ] OCR রিসিট স্ক্যানিং
-- [ ] গোল প্রগতি ভিজুয়ালাইজেশন
-- [ ] ক্যালেন্ডার API ইন্টিগ্রেশন
-
----
-
-## 📊 পারফরম্যান্স
-
-- ⚡ **Fast Loading** - Vite দিয়ে অপটিমাইজড
-- 📱 **Responsive Design** - সব ডিভাইসে কাজ করে
-- 🎯 **API Response Time** - < 200ms average
-- 💾 **Database Queries** - Indexed এবং অপটিমাইজড
-- 🚀 **Build Size** - Optimized bundle size
-
----
-
-## ⭐ প্রজেক্ট পছন্দ হলে Star দিন!
-
-আপনার সাপোর্ট আমাদের অনুপ্রেরণা দেয়। প্রজেক্টটি পছন্দ হলে ⭐ স্টার দিতে ভুলবেন না!
-
----
-
-<div align="center">
-
-**Made with ❤️ by [Sayed Tauhidul Islam](https://github.com/sayed-tauhidul-islam)**
-
-**© 2026 Life Pilot AI. All Rights Reserved.**
-
-</div>
+<p align="center">
+  <strong>🚀 Life Pilot AI — আপনার আর্থিক জীবনের AI সহযোগী</strong>
+</p>
