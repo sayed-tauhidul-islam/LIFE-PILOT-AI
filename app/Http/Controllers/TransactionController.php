@@ -22,6 +22,7 @@ class TransactionController extends Controller
         }
 
         $transactions = $query->orderBy('date', 'desc')->paginate(15);
+        $currency = Auth::user()->currency ?? 'BDT';
 
         $totals = [
             'income'  => Transaction::forUser($userId)->forPeriod($period)->income()->get()->sum('amount'),
@@ -29,14 +30,15 @@ class TransactionController extends Controller
             'saving'  => Transaction::forUser($userId)->forPeriod($period)->saving()->get()->sum('amount'),
         ];
 
-        return view('transactions.index', compact('transactions', 'totals', 'period', 'type'));
+        return view('transactions.index', compact('transactions', 'totals', 'period', 'type', 'currency'));
     }
 
     public function create()
     {
         $expenseCategories = Transaction::expenseCategories();
         $incomeCategories  = Transaction::incomeCategories();
-        return view('transactions.create', compact('expenseCategories', 'incomeCategories'));
+        $currency = Auth::user()->currency ?? 'BDT';
+        return view('transactions.create', compact('expenseCategories', 'incomeCategories', 'currency'));
     }
 
     public function store(Request $request)
@@ -51,9 +53,14 @@ class TransactionController extends Controller
             'payment_method'     => 'nullable|in:cash,card,bank,mobile',
             'is_recurring'       => 'nullable|boolean',
             'recurring_interval' => 'nullable|in:daily,weekly,monthly',
+            'currency'           => 'nullable|string|max:5',
             'notes'              => 'nullable|string|max:500',
             'tags'               => 'nullable|string',
         ]);
+
+        if ($validated['category'] === 'salary' && $validated['type'] !== 'income') {
+            return back()->withErrors(['category' => 'বেতন (salary) এর ধরন অবশ্যই আয় (income) হতে হবে।'])->withInput();
+        }
 
         $validated['user_id'] = Auth::id();
         $validated['amount']  = (float) $validated['amount'];
@@ -61,6 +68,10 @@ class TransactionController extends Controller
         $validated['date']    = \Carbon\Carbon::parse($request->date);
 
         $transaction = Transaction::create($validated);
+
+        // Clear cached aggregates used by FinScore so dashboard updates immediately
+        $cacheKey = sprintf('finscore:aggs:user:%d', Auth::id());
+        \Cache::forget($cacheKey);
 
         // Trigger AI suggestion processing asynchronously
         ProcessAISuggestion::dispatch(Auth::id())->delay(now()->addSeconds(3));
@@ -79,15 +90,16 @@ class TransactionController extends Controller
 
     public function edit($id)
     {
-        $transaction       = Transaction::where('_id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $transaction       = Transaction::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         $expenseCategories = Transaction::expenseCategories();
         $incomeCategories  = Transaction::incomeCategories();
-        return view('transactions.edit', compact('transaction', 'expenseCategories', 'incomeCategories'));
+        $currency = Auth::user()->currency ?? 'BDT';
+        return view('transactions.edit', compact('transaction', 'expenseCategories', 'incomeCategories', 'currency'));
     }
 
     public function update(Request $request, $id)
     {
-        $transaction = Transaction::where('_id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $transaction = Transaction::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
         $validated = $request->validate([
             'type'           => 'required|in:income,expense,saving',
@@ -97,8 +109,13 @@ class TransactionController extends Controller
             'date'           => 'required|date',
             'period'         => 'required|in:daily,weekly,monthly,annual',
             'payment_method' => 'nullable|in:cash,card,bank,mobile',
+            'currency'       => 'nullable|string|max:5',
             'notes'          => 'nullable|string|max:500',
         ]);
+
+        if ($validated['category'] === 'salary' && $validated['type'] !== 'income') {
+            return back()->withErrors(['category' => 'বেতন (salary) এর ধরন অবশ্যই আয় (income) হতে হবে।'])->withInput();
+        }
 
         $validated['amount'] = (float) $validated['amount'];
         $validated['date'] = \Carbon\Carbon::parse($request->date);
@@ -112,10 +129,24 @@ class TransactionController extends Controller
 
     public function destroy($id)
     {
-        $transaction = Transaction::where('_id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $transaction = Transaction::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         $transaction->delete();
 
         return response()->json(['success' => true, 'message' => 'লেনদেন মুছে ফেলা হয়েছে।']);
+    }
+
+    public function undoAi($id)
+    {
+        $transaction = Transaction::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+
+        if (!$transaction->created_by_ai) {
+            return response()->json(['success' => false, 'message' => 'এই লেনদেনটি AI দ্বারা তৈরি হয়নি।'], 422);
+        }
+
+        // undo by deleting the transaction
+        $transaction->delete();
+
+        return response()->json(['success' => true, 'message' => 'AI দ্বারা যোগ করা লেনদেন পূর্বাবস্থায় ফিরে এসেছে (মুছে ফেলা হয়েছে)।']);
     }
 
     public function apiList(Request $request)

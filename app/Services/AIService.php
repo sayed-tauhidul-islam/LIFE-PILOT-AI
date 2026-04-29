@@ -16,7 +16,7 @@ class AIService
      */
     private function hasValidApiKey(): bool
     {
-        $key = config('services.gemini.api_key', env('GEMINI_API_KEY', ''));
+        $key = config('services.gemini.api_key', '');
 
         return !empty($key) && $key !== 'your-gemini-api-key-here';
     }
@@ -47,7 +47,7 @@ class AIService
                 try {
                     $response = $this->callGemini($prompt, $user);
                     $parsed   = $this->parseResponse($response['content']);
-                    $model    = $response['model'] ?? config('services.gemini.model', 'gemini-1.5-flash');
+                    $model    = $response['model'] ?? config('services.gemini.model', 'gemini-2.0-flash');
                     $tokens   = $response['tokens'] ?? 0;
                 } catch (\Throwable $e) {
                     Log::warning('Gemini failed, falling back to local AI', [
@@ -306,9 +306,11 @@ class AIService
         // Weekly trend analysis
         $weeklyExpense = $stats['weekly_expense'] ?? 0;
         if ($weeklyExpense > 0 && $income > 0) {
-            $weeklyBudget = round($income / 4.33, 0);
+            $weeklyBudget = round($income / 4.33, 2);
             if ($weeklyExpense > $weeklyBudget) {
-                $overPct = round((($weeklyExpense - $weeklyBudget) / $weeklyBudget) * 100, 0);
+                $overPct = $weeklyBudget > 0
+                    ? round((($weeklyExpense - $weeklyBudget) / $weeklyBudget) * 100, 0)
+                    : 100;
                 $tips[] = "📅 এই সপ্তাহে সাপ্তাহিক বাজেটের চেয়ে {$overPct}% বেশি খরচ হয়েছে। আগামী সপ্তাহে ক্ষতিপূরণ করুন।";
             }
         }
@@ -603,8 +605,8 @@ Please respond ONLY with a valid JSON object (no markdown, no extra text) with t
      */
     private function callGemini(string $prompt, User $user): array
     {
-        $apiKey = config('services.gemini.api_key', env('GEMINI_API_KEY', ''));
-        $model = config('services.gemini.model', 'gemini-1.5-flash');
+        $apiKey = config('services.gemini.api_key', '');
+        $model = config('services.gemini.model', 'gemini-2.0-flash');
         $baseUrl = rtrim(config('services.gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
 
         $response = null;

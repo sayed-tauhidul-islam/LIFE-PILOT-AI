@@ -1,0 +1,86 @@
+/* Theme variables for moods (used by Blade views) */
+:root {
+  --bg-base: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-card: #F1F5F9;
+  --border: #E2E8F0;
+  --text-primary: #0F172A;
+  --text-muted: #64748B;
+  --accent: #4F46E5;
+  --accent-bg: #EEF2FF;
+  --income: #16A34A;
+  --expense: #DC2626;
+  --saving: #D97706;
+}
+
+:root[data-mood='system'] { }
+:root[data-mood='dark'] {
+  --bg-base: #060818;
+  --bg-surface: #0B0F23;
+  --bg-card: #0F1629;
+  --border: #1E2640;
+  --text-primary: #E2E8F0;
+  --text-muted: #475569;
+  --accent: #818CF8;
+  --accent-bg: #1E1B4B;
+  --income: #4ADE80;
+  --expense: #F87171;
+  --saving: #FBBF24;
+}
+:root[data-mood='light'] {
+  --bg-base: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-card: #F1F5F9;
+  --border: #E2E8F0;
+  --text-primary: #0F172A;
+  --text-muted: #64748B;
+  --accent: #4F46E5;
+  --accent-bg: #EEF2FF;
+  --income: #16A34A;
+  --expense: #DC2626;
+  --saving: #D97706;
+}
+:root[data-mood='midnight'] {
+  --bg-base: #020B18;
+  --bg-surface: #041628;
+  --bg-card: #072035;
+  --border: #0D3050;
+  --text-primary: #BAE6FD;
+  --text-muted: #38BDF8;
+  --accent: #0EA5E9;
+  --accent-bg: #082F49;
+  --income: #34D399;
+  --expense: #FB7185;
+  --saving: #FCD34D;
+}
+:root[data-mood='emerald'] {
+  --bg-base: #021208;
+  --bg-surface: #041F0E;
+  --bg-card: #062B14;
+  --border: #0D4A22;
+  --text-primary: #D1FAE5;
+  --text-muted: #6EE7B7;
+  --accent: #10B981;
+  --accent-bg: #064E3B;
+  --income: #34D399;
+  --expense: #F87171;
+  --saving: #FCD34D;
+}
+:root[data-mood='sunset'] {
+  --bg-base: #160A00;
+  --bg-surface: #1F1000;
+  --bg-card: #2D1800;
+  --border: #4A2800;
+  --text-primary: #FEF3C7;
+  --text-muted: #FCD34D;
+  --accent: #F59E0B;
+  --accent-bg: #451A03;
+  --income: #4ADE80;
+  --expense: #F87171;
+  --saving: #FCD34D;
+}
+
+/* Basic element styles to ensure Blade pages pick up theme */
+body { background: var(--bg-base); color: var(--text-primary); transition: all 0.3s ease; }
+.sidebar { background: var(--bg-surface); border-right: 1px solid var(--border); }
+.card, .settings-panel, .mood-card { background: var(--bg-card); border:1px solid var(--border); color:var(--text-primary); }

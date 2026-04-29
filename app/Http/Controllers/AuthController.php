@@ -54,7 +54,7 @@ class AuthController extends Controller
         $user = User::create([
             'name'             => $request->name,
             'email'            => $request->email,
-            'password'         => $request->password,
+            'password'         => Hash::make($request->password),
             'age'              => $request->age,
             'monthly_income'   => $request->monthly_income,
             'gender'           => $request->gender,
@@ -65,8 +65,8 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('health.index')
-            ->with('success', 'অ্যাকাউন্ট তৈরি হয়েছে! এআই পরামর্শ পেতে আপনার স্বাস্থ্য প্রোফাইল সম্পূর্ণ করুন।');
+        return redirect()->route('dashboard')
+            ->with('success', 'অ্যাকাউন্ট তৈরি হয়েছে! এখন ড্যাশবোর্ড থেকে আপনার AI ও সেটিংস কনফিগার করুন।');
     }
 
     public function logout(Request $request)

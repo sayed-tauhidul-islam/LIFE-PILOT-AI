@@ -16,43 +16,116 @@
         border-radius: 16px;
         padding: 28px;
         margin-bottom: 22px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .theme-hero::before {
+        content: '';
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        border-radius: 999px;
+        top: -90px;
+        right: -70px;
+        background: var(--dash-hero-pill-bg);
     }
 
     .theme-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 14px;
     }
 
+    @media (max-width: 1024px) {
+        .theme-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .theme-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
     .theme-option {
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 14px;
-        background: var(--surface, #fff);
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        border: 2px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        background: var(--bg-card);
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        position: relative;
     }
 
     .theme-option:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
-        border-color: var(--primary);
+        transform: scale(1.03);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+        border-color: color-mix(in oklab, var(--accent) 50%, var(--border));
+    }
+
+    .theme-option.active {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent), 0 16px 32px rgba(0, 0, 0, 0.18);
     }
 
     .theme-option input {
-        margin-right: 8px;
-        transform: translateY(1px);
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .theme-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
     }
 
     .theme-name {
         font-weight: 800;
         font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .theme-check {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        color: transparent;
+        font-size: 11px;
+    }
+
+    .theme-option.active .theme-check {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+    }
+
+    .theme-swatches {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .swatch {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.15);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
     .theme-preview {
-        margin-top: 10px;
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border);
         height: 90px;
         display: grid;
         grid-template-columns: 1fr 1.2fr;
@@ -83,75 +156,170 @@
         font-size: 12px;
         line-height: 1.65;
         color: var(--gray);
-        margin-top: 7px;
+        margin-top: 10px;
+    }
+
+    .save-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 22px;
     }
 </style>
 
 <div class="theme-hero">
-    <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;opacity:0.75;margin-bottom:8px;">Theme Presets</div>
-    <h2 style="font-size:30px;font-weight:800;margin-bottom:8px;">আপনার UI color combination নির্বাচন করুন</h2>
-    <p style="line-height:1.75;opacity:0.9;max-width:70ch;">নিচের চারটি predefined theme থেকে একটি বেছে নিলে dashboard, card, button, chart accent color সব update হবে।</p>
+    <div style="position:relative;z-index:1;max-width:72ch;">
+        <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;opacity:0.75;margin-bottom:8px;">Theme Presets</div>
+        <h2 style="font-size:30px;font-weight:800;margin-bottom:8px;">আপনার UI color combination নির্বাচন করুন</h2>
+        <p style="line-height:1.75;opacity:0.9;">নিচের ছয়টি predefined theme থেকে একটি বেছে নিলে dashboard, card, button, chart accent color সব update হবে।</p>
+    </div>
 </div>
 
-<form method="POST" action="{{ route('settings.theme.update') }}">
+<form method="POST" action="{{ route('settings.theme.update') }}" id="theme-form">
     @csrf
     @method('PUT')
 
     <div class="theme-grid">
-        <label class="theme-option">
-            <div><input type="radio" name="theme_preference" value="black-red" {{ $activeTheme === 'black-red' ? 'checked' : '' }}><span class="theme-name">1) Black BG + Red & White Text</span></div>
-            <div class="theme-preview" style="background:#0b0b0c;">
-                <div class="left" style="background:#111111;color:#fff;">Sidebar</div>
-                <div class="right" style="background:#141418;color:#fff;">
-                    <div style="background:linear-gradient(90deg,#dc2626,#ef4444);border-radius:8px;"></div>
-                    <span class="pill" style="background:#2b1113;color:#ff8686;">Accent Red</span>
-                    <span class="pill" style="background:#f5f5f5;color:#111;">White text card</span>
+        {{-- Default --}}
+        <label class="theme-option {{ $activeMood === 'default' ? 'active' : '' }}" data-mood="default">
+            <div class="theme-header">
+                <span class="theme-name">Default</span>
+                <span class="theme-check"><i class="fas fa-check"></i></span>
+            </div>
+            <div class="theme-swatches">
+                <div class="swatch" style="background:#F8FAFC;"></div>
+                <div class="swatch" style="background:#4F46E5;"></div>
+                <div class="swatch" style="background:#0F172A;"></div>
+            </div>
+            <div class="theme-preview" style="background:#F8FAFC;">
+                <div class="left" style="background:#FFFFFF;color:#0F172A;">Sidebar</div>
+                <div class="right" style="background:#F1F5F9;color:#0F172A;">
+                    <div style="background:linear-gradient(90deg,#4F46E5,#6366F1);border-radius:8px;"></div>
+                    <span class="pill" style="background:#EEF2FF;color:#4F46E5;">Accent Indigo</span>
+                    <span class="pill" style="background:#F8FAFC;color:#0F172A;">System Auto</span>
                 </div>
             </div>
-            <div class="theme-note">Bold, cinematic, high contrast dashboard mood.</div>
+            <div class="theme-note">আপনার OS এর light/dark মোড অনুযায়ী অ্যাডাপ্ট হয়।</div>
+            <input type="radio" name="theme_preference" value="default" {{ $activeMood === 'default' ? 'checked' : '' }}>
         </label>
 
-        <label class="theme-option">
-            <div><input type="radio" name="theme_preference" value="white-green" {{ $activeTheme === 'white-green' ? 'checked' : '' }}><span class="theme-name">2) White BG + Green Text</span></div>
-            <div class="theme-preview" style="background:#f8fffb;">
-                <div class="left" style="background:#ecfdf3;color:#065f46;">Sidebar</div>
-                <div class="right" style="background:#ffffff;color:#064e3b;">
-                    <div style="background:linear-gradient(90deg,#059669,#10b981);border-radius:8px;"></div>
-                    <span class="pill" style="background:#d1fae5;color:#065f46;">Accent Green</span>
-                    <span class="pill" style="background:#f0fdf4;color:#065f46;">Fresh clean</span>
+        {{-- Cosmic Night --}}
+        <label class="theme-option {{ $activeMood === 'cosmic-night' ? 'active' : '' }}" data-mood="cosmic-night">
+            <div class="theme-header">
+                <span class="theme-name">Dark Mode (Cosmic Night)</span>
+                <span class="theme-check"><i class="fas fa-check"></i></span>
+            </div>
+            <div class="theme-swatches">
+                <div class="swatch" style="background:#060818;"></div>
+                <div class="swatch" style="background:#818CF8;"></div>
+                <div class="swatch" style="background:#E2E8F0;"></div>
+            </div>
+            <div class="theme-preview" style="background:#060818;">
+                <div class="left" style="background:#0B0F23;color:#E2E8F0;">Sidebar</div>
+                <div class="right" style="background:#0F1629;color:#E2E8F0;">
+                    <div style="background:linear-gradient(90deg,#818CF8,#A5B4FC);border-radius:8px;"></div>
+                    <span class="pill" style="background:#1E1B4B;color:#818CF8;">Accent Indigo</span>
+                    <span class="pill" style="background:#0F1629;color:#E2E8F0;">Deep dark</span>
                 </div>
             </div>
-            <div class="theme-note">Calm, clean, productivity-focused experience.</div>
+            <div class="theme-note">Cinematic deep dark workspace with indigo accents.</div>
+            <input type="radio" name="theme_preference" value="cosmic-night" {{ $activeMood === 'cosmic-night' ? 'checked' : '' }}>
         </label>
 
-        <label class="theme-option">
-            <div><input type="radio" name="theme_preference" value="white-black" {{ $activeTheme === 'white-black' ? 'checked' : '' }}><span class="theme-name">3) White BG + Black Text</span></div>
-            <div class="theme-preview" style="background:#f7f7f8;">
-                <div class="left" style="background:#ffffff;color:#111111;">Sidebar</div>
-                <div class="right" style="background:#fafafa;color:#111111;">
-                    <div style="background:linear-gradient(90deg,#111,#323232);border-radius:8px;"></div>
-                    <span class="pill" style="background:#ededed;color:#111;">Monochrome</span>
-                    <span class="pill" style="background:#ffffff;color:#111;">Minimal pro</span>
+        {{-- Clean White --}}
+        <label class="theme-option {{ $activeMood === 'clean-white' ? 'active' : '' }}" data-mood="clean-white">
+            <div class="theme-header">
+                <span class="theme-name">Light Mode (Clean White)</span>
+                <span class="theme-check"><i class="fas fa-check"></i></span>
+            </div>
+            <div class="theme-swatches">
+                <div class="swatch" style="background:#F8FAFC;"></div>
+                <div class="swatch" style="background:#4F46E5;"></div>
+                <div class="swatch" style="background:#0F172A;"></div>
+            </div>
+            <div class="theme-preview" style="background:#F8FAFC;">
+                <div class="left" style="background:#FFFFFF;color:#0F172A;">Sidebar</div>
+                <div class="right" style="background:#F1F5F9;color:#0F172A;">
+                    <div style="background:linear-gradient(90deg,#4F46E5,#6366F1);border-radius:8px;"></div>
+                    <span class="pill" style="background:#EEF2FF;color:#4F46E5;">Accent Blue</span>
+                    <span class="pill" style="background:#F1F5F9;color:#0F172A;">Clean bright</span>
                 </div>
             </div>
-            <div class="theme-note">Minimal, editorial and distraction-free UI.</div>
+            <div class="theme-note">Fresh, clean, and productivity-focused light experience.</div>
+            <input type="radio" name="theme_preference" value="clean-white" {{ $activeMood === 'clean-white' ? 'checked' : '' }}>
         </label>
 
-        <label class="theme-option">
-            <div><input type="radio" name="theme_preference" value="blue-red" {{ $activeTheme === 'blue-red' ? 'checked' : '' }}><span class="theme-name">4) Blue BG + White, Red Text</span></div>
-            <div class="theme-preview" style="background:#0b2d6f;">
-                <div class="left" style="background:#123f8f;color:#fff;">Sidebar</div>
-                <div class="right" style="background:#0c3278;color:#fff;">
-                    <div style="background:linear-gradient(90deg,#ef4444,#f87171);border-radius:8px;"></div>
-                    <span class="pill" style="background:#1f4da0;color:#fff;">Blue depth</span>
-                    <span class="pill" style="background:#450a0a;color:#fca5a5;">Red contrast</span>
+        {{-- Ocean Deep --}}
+        <label class="theme-option {{ $activeMood === 'ocean-deep' ? 'active' : '' }}" data-mood="ocean-deep">
+            <div class="theme-header">
+                <span class="theme-name">Midnight Blue (Ocean Deep)</span>
+                <span class="theme-check"><i class="fas fa-check"></i></span>
+            </div>
+            <div class="theme-swatches">
+                <div class="swatch" style="background:#020B18;"></div>
+                <div class="swatch" style="background:#0EA5E9;"></div>
+                <div class="swatch" style="background:#BAE6FD;"></div>
+            </div>
+            <div class="theme-preview" style="background:#020B18;">
+                <div class="left" style="background:#041628;color:#BAE6FD;">Sidebar</div>
+                <div class="right" style="background:#072035;color:#BAE6FD;">
+                    <div style="background:linear-gradient(90deg,#0EA5E9,#38BDF8);border-radius:8px;"></div>
+                    <span class="pill" style="background:#082F49;color:#0EA5E9;">Accent Cyan</span>
+                    <span class="pill" style="background:#072035;color:#BAE6FD;">Ocean deep</span>
                 </div>
             </div>
-            <div class="theme-note">Energetic and modern with strong visual contrast.</div>
+            <div class="theme-note">Deep ocean tones with calming cyan accents.</div>
+            <input type="radio" name="theme_preference" value="ocean-deep" {{ $activeMood === 'ocean-deep' ? 'checked' : '' }}>
+        </label>
+
+        {{-- Emerald Forest --}}
+        <label class="theme-option {{ $activeMood === 'emerald-forest' ? 'active' : '' }}" data-mood="emerald-forest">
+            <div class="theme-header">
+                <span class="theme-name">Emerald Forest (Nature)</span>
+                <span class="theme-check"><i class="fas fa-check"></i></span>
+            </div>
+            <div class="theme-swatches">
+                <div class="swatch" style="background:#021208;"></div>
+                <div class="swatch" style="background:#10B981;"></div>
+                <div class="swatch" style="background:#D1FAE5;"></div>
+            </div>
+            <div class="theme-preview" style="background:#021208;">
+                <div class="left" style="background:#041F0E;color:#D1FAE5;">Sidebar</div>
+                <div class="right" style="background:#062B14;color:#D1FAE5;">
+                    <div style="background:linear-gradient(90deg,#10B981,#34D399);border-radius:8px;"></div>
+                    <span class="pill" style="background:#064E3B;color:#10B981;">Accent Green</span>
+                    <span class="pill" style="background:#062B14;color:#D1FAE5;">Nature vibe</span>
+                </div>
+            </div>
+            <div class="theme-note">Organic dark green tones for a nature-inspired workspace.</div>
+            <input type="radio" name="theme_preference" value="emerald-forest" {{ $activeMood === 'emerald-forest' ? 'checked' : '' }}>
+        </label>
+
+        {{-- Amber Dusk --}}
+        <label class="theme-option {{ $activeMood === 'amber-dusk' ? 'active' : '' }}" data-mood="amber-dusk">
+            <div class="theme-header">
+                <span class="theme-name">Sunset Warm (Amber Dusk)</span>
+                <span class="theme-check"><i class="fas fa-check"></i></span>
+            </div>
+            <div class="theme-swatches">
+                <div class="swatch" style="background:#160A00;"></div>
+                <div class="swatch" style="background:#F59E0B;"></div>
+                <div class="swatch" style="background:#FEF3C7;"></div>
+            </div>
+            <div class="theme-preview" style="background:#160A00;">
+                <div class="left" style="background:#1F1000;color:#FEF3C7;">Sidebar</div>
+                <div class="right" style="background:#2D1800;color:#FEF3C7;">
+                    <div style="background:linear-gradient(90deg,#F59E0B,#FBBF24);border-radius:8px;"></div>
+                    <span class="pill" style="background:#451A03;color:#F59E0B;">Accent Amber</span>
+                    <span class="pill" style="background:#2D1800;color:#FEF3C7;">Warm dusk</span>
+                </div>
+            </div>
+            <div class="theme-note">Warm amber sunset tones for a cozy, focused evening feel.</div>
+            <input type="radio" name="theme_preference" value="amber-dusk" {{ $activeMood === 'amber-dusk' ? 'checked' : '' }}>
         </label>
     </div>
 
-    <div style="display:flex;gap:10px;align-items:center;margin-top:18px;">
+    <div class="save-row">
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i> থিম সংরক্ষণ করুন
         </button>
@@ -159,3 +327,20 @@
     </div>
 </form>
 @endsection
+
+@push('scripts')
+<script>
+(function() {
+    const options = document.querySelectorAll('.theme-option');
+    options.forEach(opt => {
+        opt.addEventListener('click', function() {
+            options.forEach(o => o.classList.remove('active'));
+            this.classList.add('active');
+            const input = this.querySelector('input[type="radio"]');
+            if (input) input.checked = true;
+        });
+    });
+})();
+</script>
+@endpush
+

@@ -33,8 +33,9 @@ class BudgetController extends Controller
         });
 
         $categories = Transaction::expenseCategories();
+        $currency = Auth::user()->currency ?? 'BDT';
 
-        return view('budget.index', compact('budgetsWithSpent', 'categories'));
+        return view('budget.index', compact('budgetsWithSpent', 'categories', 'currency'));
     }
 
     public function store(Request $request)
@@ -64,7 +65,7 @@ class BudgetController extends Controller
 
     public function update(Request $request, $id)
     {
-        $budget = Budget::where('_id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $budget = Budget::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
         $validated = $request->validate([
             'limit_amount' => 'required|numeric|min:0.01',
@@ -78,7 +79,7 @@ class BudgetController extends Controller
 
     public function destroy($id)
     {
-        $budget = Budget::where('_id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $budget = Budget::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         $budget->update(['is_active' => false]);
 
         return response()->json(['success' => true, 'message' => 'বাজেট সরানো হয়েছে।']);

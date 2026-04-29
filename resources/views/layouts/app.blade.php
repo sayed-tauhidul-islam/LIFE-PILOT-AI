@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="{{ auth()->user()->language === 'english' ? 'en' : (auth()->user()->language === 'hindi' ? 'hi' : 'bn') }}">
 
 <head>
     <meta charset="UTF-8">
@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Tailwind CSS (utility usage for modern UI composition) -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         * {
@@ -99,6 +101,7 @@
             --hero-accent: #ef4444;
         }
 
+        body.theme-green-white,
         body.theme-white-green {
             --primary: #16a34a;
             --primary-dark: #15803d;
@@ -144,6 +147,7 @@
             --dash-grid-line: rgba(22, 163, 74, 0.08);
         }
 
+        body.theme-black-white,
         body.theme-white-black {
             --primary: #111827;
             --primary-dark: #030712;
@@ -189,49 +193,103 @@
             --dash-grid-line: rgba(24, 24, 27, 0.07);
         }
 
+        body.theme-pink-black,
         body.theme-blue-red {
             --primary: #ef4444;
             --primary-dark: #dc2626;
             --primary-light: rgba(239, 68, 68, 0.16);
             --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #93c5fd;
+            --danger: #ec4899;
+            --warning: #f472b6;
+            --info: #f9a8d4;
             --dark: #f8fafc;
-            --gray: #c1d6ff;
-            --light: #183f89;
-            --surface: #10387d;
-            --border: rgba(191, 219, 254, 0.22);
-            --card-shadow: 0 10px 28px rgba(3, 12, 33, 0.35);
+            --gray: #f5c6df;
+            --light: #2d1032;
+            --surface: #1f0b24;
+            --border: rgba(249, 168, 212, 0.24);
+            --card-shadow: 0 10px 28px rgba(27, 3, 22, 0.38);
             --body-gradient:
-                radial-gradient(circle at 12% 0%, rgba(239, 68, 68, 0.22), transparent 32%),
-                linear-gradient(180deg, #082456 0%, #0b3172 100%);
-            --sidebar-bg: #0a285f;
-            --sidebar-border: #1d4288;
+                radial-gradient(circle at 12% 0%, rgba(236, 72, 153, 0.25), transparent 34%),
+                linear-gradient(180deg, #0c0610 0%, #1a0a1f 100%);
+            --sidebar-bg: #120716;
+            --sidebar-border: #3a1a42;
             --sidebar-text: #f8fafc;
-            --sidebar-muted: #d0e1ff;
-            --sidebar-hover: #163b7c;
-            --sidebar-active-bg: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(255, 255, 255, 0.1));
+            --sidebar-muted: #f3bad8;
+            --sidebar-hover: #2b1332;
+            --sidebar-active-bg: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(255, 255, 255, 0.1));
             --sidebar-active-text: #ffffff;
-            --topbar-bg: rgba(12, 50, 115, 0.9);
-            --topbar-border: rgba(191, 219, 254, 0.18);
-            --table-row-hover: rgba(14, 66, 147, 0.62);
-            --hero-accent: #ef4444;
-            --dash-hero-bg: linear-gradient(128deg, #082456 0%, #0b3172 56%, #124699 100%);
+            --topbar-bg: rgba(23, 9, 29, 0.92);
+            --topbar-border: rgba(249, 168, 212, 0.2);
+            --table-row-hover: rgba(55, 20, 58, 0.72);
+            --hero-accent: #ec4899;
+            --dash-hero-bg: linear-gradient(128deg, #0e0612 0%, #2d1032 56%, #5b1d5f 100%);
             --dash-hero-text: #ffffff;
-            --dash-hero-sub: #dbeafe;
-            --dash-hero-pill-bg: rgba(147, 197, 253, 0.16);
-            --dash-hero-pill-border: rgba(191, 219, 254, 0.3);
+            --dash-hero-sub: #f7d3e7;
+            --dash-hero-pill-bg: rgba(249, 168, 212, 0.16);
+            --dash-hero-pill-border: rgba(249, 168, 212, 0.34);
             --dash-hero-pill-text: #ffffff;
-            --dash-glass-bg: rgba(147, 197, 253, 0.14);
-            --dash-glass-bg-hover: rgba(191, 219, 254, 0.2);
-            --dash-glass-border: rgba(191, 219, 254, 0.32);
-            --dash-ai-bg: linear-gradient(130deg, #082456 0%, #0f3a84 50%, #124699 100%);
+            --dash-glass-bg: rgba(249, 168, 212, 0.16);
+            --dash-glass-bg-hover: rgba(249, 168, 212, 0.26);
+            --dash-glass-border: rgba(249, 168, 212, 0.34);
+            --dash-ai-bg: linear-gradient(130deg, #120716 0%, #3a1441 50%, #5b1d5f 100%);
             --dash-ai-text: #f8fafc;
-            --dash-ai-muted: #dbeafe;
-            --dash-ai-panel: rgba(191, 219, 254, 0.14);
-            --dash-ai-border: rgba(191, 219, 254, 0.3);
-            --dash-grid-line: rgba(191, 219, 254, 0.1);
+            --dash-ai-muted: #f7d3e7;
+            --dash-ai-panel: rgba(249, 168, 212, 0.14);
+            --dash-ai-border: rgba(249, 168, 212, 0.3);
+            --dash-grid-line: rgba(249, 168, 212, 0.1);
+        }
+
+        body.theme-yellow-black {
+            --primary: #eab308;
+            --primary-dark: #ca8a04;
+            --primary-light: rgba(234, 179, 8, 0.18);
+            --success: #84cc16;
+            --danger: #f97316;
+            --warning: #facc15;
+            --info: #fde047;
+            --dark: #fefce8;
+            --gray: #fde68a;
+            --light: #1a1a12;
+            --surface: #11110b;
+            --border: rgba(250, 204, 21, 0.25);
+            --card-shadow: 0 12px 28px rgba(26, 26, 18, 0.42);
+            --body-gradient:
+                radial-gradient(circle at 12% 0%, rgba(250, 204, 21, 0.26), transparent 34%),
+                linear-gradient(180deg, #080807 0%, #11110b 100%);
+            --sidebar-bg: #0a0a07;
+            --sidebar-border: #252518;
+            --sidebar-text: #fefce8;
+            --sidebar-muted: #fde68a;
+            --sidebar-hover: #181811;
+            --sidebar-active-bg: linear-gradient(135deg, rgba(250, 204, 21, 0.35), rgba(255, 255, 255, 0.08));
+            --sidebar-active-text: #111111;
+            --topbar-bg: rgba(14, 14, 11, 0.92);
+            --topbar-border: rgba(250, 204, 21, 0.22);
+            --table-row-hover: rgba(39, 39, 24, 0.75);
+            --hero-accent: #eab308;
+            --dash-hero-bg: linear-gradient(128deg, #0b0b08 0%, #1d1d14 56%, #302f19 100%);
+            --dash-hero-text: #fefce8;
+            --dash-hero-sub: #fde68a;
+            --dash-hero-pill-bg: rgba(250, 204, 21, 0.18);
+            --dash-hero-pill-border: rgba(250, 204, 21, 0.36);
+            --dash-hero-pill-text: #fefce8;
+            --dash-glass-bg: rgba(250, 204, 21, 0.18);
+            --dash-glass-bg-hover: rgba(250, 204, 21, 0.26);
+            --dash-glass-border: rgba(250, 204, 21, 0.36);
+            --dash-ai-bg: linear-gradient(130deg, #0a0a07 0%, #1f1d10 50%, #383118 100%);
+            --dash-ai-text: #fefce8;
+            --dash-ai-muted: #fde68a;
+            --dash-ai-panel: rgba(250, 204, 21, 0.14);
+            --dash-ai-border: rgba(250, 204, 21, 0.3);
+            --dash-grid-line: rgba(250, 204, 21, 0.12);
+        }
+
+        body.contrast-light {
+            filter: contrast(0.94) saturate(0.96);
+        }
+
+        body.contrast-dark {
+            filter: contrast(1.14) saturate(1.08);
         }
 
         body {
@@ -342,15 +400,15 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 11px 20px;
+            padding: 12px 18px;
             color: var(--sidebar-muted);
             text-decoration: none;
             font-size: 14px;
-            font-weight: 500;
-            border-radius: 0;
-            transition: all 0.2s;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.18s ease;
             position: relative;
-            margin: 1px 0;
+            margin: 6px 10px;
         }
 
         .nav-item:hover {
@@ -362,7 +420,8 @@
             background: var(--sidebar-active-bg);
             color: var(--sidebar-active-text);
             border-left: 3px solid var(--primary);
-            box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 20%, transparent);
+            box-shadow: 0 6px 18px color-mix(in oklab, var(--primary) 12%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--primary) 10%, transparent);
+            transform: translateX(4px);
         }
 
         .nav-item i {
@@ -509,13 +568,53 @@
             gap: 12px;
         }
 
+        .topbar-heading {
+            min-width: 0;
+        }
+
+        .topbar-shortcuts {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .topbar-shortcut {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--surface) 88%, transparent);
+            color: var(--dark);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            transition: transform 0.18s ease, border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+            white-space: nowrap;
+        }
+
+        .topbar-shortcut:hover {
+            color: var(--primary);
+            border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+            background: color-mix(in oklab, var(--primary) 9%, var(--surface));
+            transform: translateY(-1px);
+        }
+
+        .topbar-shortcut.is-current {
+            background: color-mix(in oklab, var(--primary) 14%, var(--surface));
+            border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+            color: var(--primary);
+        }
+
         .menu-toggle {
             width: 38px;
             height: 38px;
             border-radius: 10px;
             border: 1px solid var(--border);
-            background: var(--surface);
-            color: var(--dark);
+            background: var(--bg-surface);
+            color: var(--text-primary);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -594,33 +693,51 @@
         .topbar {
             background: var(--topbar-bg);
             border-bottom: 1px solid var(--topbar-border);
-            padding: 0 28px;
-            height: 64px;
-            display: flex;
+            padding: 14px 24px;
+            min-height: 78px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
             align-items: center;
-            justify-content: space-between;
+            gap: 14px;
             position: sticky;
             top: 0;
             z-index: 50;
             backdrop-filter: blur(8px);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
         }
 
         .topbar-title {
             font-size: 18px;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--dark);
+            line-height: 1.1;
         }
 
         .topbar-subtitle {
             font-size: 12px;
             color: var(--gray);
-            margin-top: 1px;
+            margin-top: 4px;
         }
 
         .topbar-actions {
             display: flex;
             align-items: center;
             gap: 12px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .topbar-center {
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            min-width: 0;
+        }
+
+        .topbar-right {
+            display: flex;
+            justify-content: flex-end;
+            min-width: 0;
         }
 
         .btn {
@@ -638,7 +755,7 @@
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: var(--accent);
             color: white;
         }
 
@@ -663,8 +780,8 @@
         }
 
         .btn-outline {
-            background: var(--surface);
-            color: var(--dark);
+            background: transparent;
+            color: var(--text-primary);
             border: 1px solid var(--border);
         }
 
@@ -685,11 +802,12 @@
 
         /* ===== CARDS ===== */
         .card {
-            background: var(--surface);
+            background: var(--bg-card);
             border-radius: 14px;
             padding: 24px;
             box-shadow: var(--card-shadow);
             border: 1px solid var(--border);
+            color: var(--text-primary);
         }
 
         .card-title {
@@ -1178,11 +1296,30 @@
         .topbar-left {
             flex: 1;
             min-width: 0;
+            align-items: flex-start;
         }
 
         .topbar-title {
             font-size: 16px;
             line-height: 1.25;
+        }
+
+        .topbar-shortcuts {
+            width: 100%;
+        }
+
+        .topbar {
+            grid-template-columns: 1fr;
+        }
+
+        .topbar-center {
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .topbar-right {
+            width: 100%;
+            justify-content: flex-start;
         }
 
         .topbar-actions {
@@ -1225,9 +1362,12 @@
     </style>
 
     @stack('styles')
+    <!-- Theme stylesheet (loads CSS variables for moods) -->
+    <link rel="stylesheet" href="{{ asset('css/theme.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/pro-theme.css') }}">
 </head>
 
-<body class="theme-{{ auth()->user()->theme_preference ?? 'black-red' }}">
+<body class="theme-{{ auth()->user()->theme_preference ?? 'black-red' }} contrast-{{ auth()->user()->contrast_mode ?? 'default' }}">
 
     <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
@@ -1257,10 +1397,10 @@
                 <i class="fas fa-file-chart-line"></i> রিপোর্ট
             </a>
 
-            <div class="nav-section-title">স্বাস্থ্য</div>
-            <a href="{{ route('health.index') }}"
-                class="nav-item {{ request()->routeIs('health.*') ? 'active' : '' }}">
-                <i class="fas fa-heartbeat"></i> স্বাস্থ্য প্রোফাইল
+            <div class="nav-section-title">AI</div>
+            <a href="{{ route('ai.index') }}"
+                class="nav-item {{ request()->routeIs('ai.*') ? 'active' : '' }}">
+                <i class="fas fa-robot"></i> AI Workspace
             </a>
 
             <div class="nav-section-title">সেটিংস</div>
@@ -1276,11 +1416,24 @@
                     <a href="{{ route('settings.theme') }}" class="nav-sub-item {{ request()->routeIs('settings.theme*') ? 'active' : '' }}">
                         <i class="fas fa-palette"></i> Theme
                     </a>
+                    <a href="{{ route('settings.preferences') }}" class="nav-sub-item {{ request()->routeIs('settings.preferences*') ? 'active' : '' }}">
+                        <i class="fas fa-language"></i> Language
+                    </a>
+                    <a href="{{ route('settings.preferences') }}" class="nav-sub-item {{ request()->routeIs('settings.preferences*') ? 'active' : '' }}">
+                        <i class="fas fa-circle-half-stroke"></i> Contrast
+                    </a>
                     <a href="{{ route('settings.ai') }}" class="nav-sub-item {{ request()->routeIs('settings.ai*') ? 'active' : '' }}">
-                        <i class="fas fa-robot"></i> AI
+                        <i class="fas fa-microchip"></i> AI Engine
                     </a>
                 </div>
             </div>
+
+            <form method="POST" action="{{ route('logout') }}" style="margin: 8px 12px 0 12px;">
+                @csrf
+                <button type="submit" class="nav-item nav-item-toggle" style="color:#fca5a5; border-radius: 10px;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
         </div>
 
         <div class="sidebar-footer">
@@ -1305,27 +1458,7 @@
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <!-- TOP BAR -->
-        <div class="topbar">
-            <div class="topbar-left">
-                <button type="button" class="menu-toggle" id="menu-toggle" title="মেনু (M)" data-tip="Press M to open menu" aria-label="মেনু টগল">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div>
-                    <div class="topbar-title">@yield('page-title', 'ড্যাশবোর্ড')</div>
-                    <div class="topbar-subtitle">{{ now()->translatedFormat('l, F j Y') }}</div>
-                </div>
-            </div>
-            <div class="topbar-actions">
-                @yield('topbar-actions')
-                <!-- Realtime AI Status -->
-                <div id="ai-status" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray);">
-                    <span id="ai-dot"
-                        style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;"></span>
-                    এআই সক্রিয়
-                </div>
-            </div>
-        </div>
+        @include('layouts.partials.topbar')
 
         <!-- PAGE CONTENT -->
         <div class="page-content">
@@ -1348,6 +1481,34 @@
 
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
+
+    @php
+        $__aiHistory = [];
+        try {
+            if (auth()->check()) {
+                $__aiHistory = \App\Models\AISuggestion::where('user_id', auth()->id())->orderBy('created_at', 'desc')->limit(10)->get();
+            }
+        } catch (\Throwable $e) {
+            $__aiHistory = [];
+        }
+    @endphp
+
+    <div id="ai-history-panel" style="position:fixed;right:18px;top:70px;width:320px;max-height:70vh;overflow:auto;background:var(--surface);border:1px solid var(--border);box-shadow:0 12px 30px rgba(0,0,0,0.12);padding:12px;border-radius:12px;display:none;z-index:9999">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <strong>AI History</strong>
+            <button id="ai-history-close" style="background:none;border:none;cursor:pointer">&times;</button>
+        </div>
+        <div id="ai-history-list">
+            @forelse($__aiHistory as $s)
+                <div class="ai-history-item" data-id="{{ $s->id }}" style="padding:8px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;background:var(--light)">
+                    <div style="font-size:13px;font-weight:700">{{ Str::limit($s->summary ?? 'AI Suggestion', 80) }}</div>
+                    <div style="font-size:12px;color:var(--gray);margin-top:6px">{{ $s->created_at->translatedFormat('Y-m-d H:i') }}</div>
+                </div>
+            @empty
+                <div style="color:var(--gray)">কোন এআই ইতিহাস পাওয়া যায়নি।</div>
+            @endforelse
+        </div>
+    </div>
 
     <!-- PUSHER REAL-TIME -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
@@ -1440,6 +1601,58 @@
         } catch (echoErr) {
             console.warn('Echo/Pusher init skipped:', echoErr.message);
         }
+
+        // AI history panel toggle and realtime updates
+        document.addEventListener('DOMContentLoaded', function () {
+            const panel = document.getElementById('ai-history-panel');
+            const toggle = document.getElementById('ai-history-toggle');
+            const closeBtn = document.getElementById('ai-history-close');
+            const list = document.getElementById('ai-history-list');
+            const countEl = document.getElementById('ai-history-count');
+
+            function updateCount() {
+                const items = list ? list.querySelectorAll('.ai-history-item').length : 0;
+                if (countEl) countEl.textContent = items > 0 ? `(${items})` : '';
+            }
+
+            if (toggle) {
+                toggle.addEventListener('click', () => {
+                    if (!panel) return;
+                    panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'block' : 'none';
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => panel && (panel.style.display = 'none'));
+            }
+
+            updateCount();
+
+            // Prepend new suggestion when received via Echo
+            if (window.Echo) {
+                try {
+                    Echo.private(`user.${USER_ID}`)
+                        .listen('.ai.suggestion.ready', (payload) => {
+                            const data = payload.suggestion || payload;
+                            const item = document.createElement('div');
+                            item.className = 'ai-history-item';
+                            item.style = 'padding:8px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;background:var(--light)';
+                            item.dataset.id = data.id || '';
+                            const title = document.createElement('div');
+                            title.style.fontSize = '13px'; title.style.fontWeight = '700';
+                            title.textContent = (data.summary || data.title || 'AI Suggestion').slice(0, 120);
+                            const meta = document.createElement('div');
+                            meta.style.fontSize = '12px'; meta.style.color = 'var(--gray)'; meta.style.marginTop = '6px';
+                            meta.textContent = new Date(data.created_at || Date.now()).toLocaleString();
+                            item.appendChild(title); item.appendChild(meta);
+                            if (list) list.prepend(item);
+                            updateCount();
+                        });
+                } catch (e) {
+                    // ignore
+                }
+            }
+        });
 
         // Animate FinScore ring
         function animateFinScore(score) {
@@ -1658,6 +1871,44 @@
     </script>
 
     @stack('scripts')
+
+    <script>
+        // Theme loader: apply saved mood and contrast from localStorage
+        (function(){
+            try{
+                const mood = localStorage.getItem('theme_mood') || null;
+                if(mood) document.documentElement.setAttribute('data-mood', mood);
+                const contrast = localStorage.getItem('contrast_level');
+                const wrapper = document.getElementById('app') || document.querySelector('.main-content') || document.body;
+                if(contrast && wrapper){ wrapper.style.filter = `brightness(${contrast}%)`; }
+                // Load fonts for Bengali + Inter for numbers
+                const link1 = document.createElement('link');
+                link1.rel = 'stylesheet';
+                link1.href = 'https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap';
+                document.head.appendChild(link1);
+                const link2 = document.createElement('link');
+                link2.rel = 'stylesheet';
+                link2.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap';
+                document.head.appendChild(link2);
+            }catch(e){ console.warn('Theme loader error', e); }
+        })();
+    </script>
+    <script>
+        // If server set flash payload to set localStorage, apply it immediately
+        (function(){
+            try{
+                @if(session()->has('set_theme_mood'))
+                    localStorage.setItem('theme_mood', '{{ session('set_theme_mood') }}');
+                    document.documentElement.setAttribute('data-mood','{{ session('set_theme_mood') }}');
+                @endif
+                @if(session()->has('set_contrast_level'))
+                    localStorage.setItem('contrast_level', '{{ session('set_contrast_level') }}');
+                    const wrapper = document.getElementById('app') || document.querySelector('.main-content') || document.body;
+                    if(wrapper) wrapper.style.filter = `brightness({{ session('set_contrast_level') } }%)`;
+                @endif
+            }catch(e){ }
+        })();
+    </script>
 </body>
 
 </html>

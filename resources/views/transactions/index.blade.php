@@ -87,7 +87,7 @@
             </thead>
             <tbody>
                 @forelse($transactions as $t)
-                    <tr>
+                    <tr style="background: {{ $t->type === 'income' ? 'rgba(16,185,129,0.03)' : ($t->type === 'expense' ? 'rgba(239,68,68,0.03)' : 'rgba(59,130,246,0.03)') }};">
                         <td style="color:var(--gray);font-size:12px;">
                             {{ \Carbon\Carbon::parse($t->date)->translatedFormat('M d, Y') }}
                         </td>
@@ -109,24 +109,33 @@
                             {{ $t->type === 'income' ? '+' : '-' }}{{ $currency }}{{ number_format($t->amount, 0) }}
                         </td>
                         <td>
-                            <div style="display:flex;gap:6px;">
-                                <a href="{{ route('transactions.edit', $t->_id) }}"
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                <a href="{{ route('transactions.edit', $t->id) }}"
                                     class="btn btn-outline btn-sm">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button onclick="deleteTransaction('{{ $t->_id }}')" class="btn btn-danger btn-sm">
+                                <button onclick="deleteTransaction('{{ $t->id }}')" class="btn btn-danger btn-sm">
                                     <i class="fas fa-trash"></i>
                                 </button>
+                                @if(!empty($t->created_by_ai))
+                                    <span class="badge badge-info" style="margin-left:8px;font-size:11px;padding:6px;border-radius:6px;">Added by AI</span>
+                                    <button class="btn btn-ghost btn-sm" onclick="undoAi('{{ $t->id }}')" style="margin-left:6px;font-size:12px;">Undo</button>
+                                @endif
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="7" style="text-align:center;color:var(--gray);padding:40px;">
-                            <i class="fas fa-receipt" style="font-size:32px;margin-bottom:12px;display:block;"></i>
-                            কোনো লেনদেন পাওয়া যায়নি।
-                            <a href="{{ route('transactions.create') }}"
-                                style="color:var(--primary);font-weight:600;">আপনার প্রথম লেনদেন যোগ করুন</a>
+                            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+                                <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="4" y="10" width="112" height="60" rx="10" fill="#ecfdf5" stroke="#bbf7d0" />
+                                    <path d="M18 50 L40 30 L60 44 L82 22 L102 40" stroke="#16a34a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div style="font-weight:700;font-size:16px;color:var(--dark);">কোনো লেনদেন পাওয়া যায়নি</div>
+                                <div style="color:var(--gray);max-width:420px">এখনও কোনো লেনদেন মোতাবেক ডাটা পাওয়া যায়নি — প্রথম লেনদেন যোগ করতে নিচের বাটনে ক্লিক করুন অথবা AI ব্যবহার করে কণ্ঠ বা চ্যাট দিয়ে দ্রুত যোগ করুন।</div>
+                                <a href="{{ route('transactions.create') }}" class="btn btn-primary" style="margin-top:8px;">আপনার প্রথম লেনদেন যোগ করুন</a>
+                            </div>
                         </td>
                     </tr>
                 @endforelse
@@ -151,6 +160,21 @@
                 }
             } catch (e) {
                 showToast('মুছে ফেলা ব্যর্থ হয়েছে।', 'danger');
+            }
+        }
+
+        async function undoAi(id) {
+            if (!confirm('AI দ্বারা যোগ করা এই লেনদেনটি ফিরিয়ে আনতে (মুছে ফেলতে) চান?')) return;
+            try {
+                const res = await apiCall(`/transactions/${id}/undo-ai`, 'POST');
+                if (res.success) {
+                    showToast('AI দ্বারা যোগ করা লেনদেন মুছে ফেলা হয়েছে।', 'success');
+                    setTimeout(() => location.reload(), 700);
+                } else {
+                    showToast(res.message || 'অপ্রত্যাশিত ত্রুটি', 'danger');
+                }
+            } catch (e) {
+                showToast('অপারেশন ব্যর্থ হয়েছে।', 'danger');
             }
         }
 

@@ -21,6 +21,7 @@ class FinanceService
         $saving  = Transaction::forUser($userId)->forPeriod($period)->saving()->get()->sum('amount');
 
         $todayExpense = Transaction::forUser($userId)->forPeriod('daily')->expense()->get()->sum('amount');
+        $todayIncome = Transaction::forUser($userId)->forPeriod('daily')->income()->get()->sum('amount');
 
         $categoryBreakdown = Transaction::forUser($userId)
             ->forPeriod($period)
@@ -38,6 +39,7 @@ class FinanceService
             'monthly_income'       => round($income, 2),
             'monthly_expense'      => round($expense, 2),
             'monthly_saving'       => round($saving, 2),
+            'today_income'         => round($todayIncome, 2),
             'today_expense'        => round($todayExpense, 2),
             'weekly_expense'       => round(Transaction::forUser($userId)->forPeriod('weekly')->expense()->get()->sum('amount'), 2),
             'annual_expense'       => round(Transaction::forUser($userId)->forPeriod('annual')->expense()->get()->sum('amount'), 2),

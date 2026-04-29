@@ -166,7 +166,7 @@
         <div style="display:grid;gap:12px;line-height:1.6;color:var(--dark);font-size:13px;">
             <div style="padding:12px;background:#eff6ff;border-radius:12px;">
                 <strong>Gemini key</strong><br>
-                Add <code>GEMINI_API_KEY</code> to your <code>.env</code> file and keep <code>GEMINI_MODEL=gemini-1.5-flash</code> for the free tier.
+                Add <code>GEMINI_API_KEY</code> to your <code>.env</code> file and keep <code>GEMINI_MODEL=gemini-2.0-flash</code> for the free tier.
             </div>
             <div style="padding:12px;background:#f0fdf4;border-radius:12px;">
                 <strong>Fallback safety</strong><br>

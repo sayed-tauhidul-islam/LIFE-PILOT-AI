@@ -79,7 +79,7 @@
                     <span>সীমা: <strong>{{ $currency }}{{ $budget->limit_amount }}</strong></span>
                 </div>
                 <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-                    <button onclick="deleteBudget('{{ $budget->_id }}')" class="btn btn-danger btn-sm">
+                    <button onclick="deleteBudget('{{ $budget->id }}')" class="btn btn-danger btn-sm">
                         <i class="fas fa-trash"></i> সরান
                     </button>
                 </div>

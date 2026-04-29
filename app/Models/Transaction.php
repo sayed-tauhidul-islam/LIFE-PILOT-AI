@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use MongoDB\Laravel\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
-    protected $connection = 'mongodb';
-    protected $collection = 'transactions';
+    protected $table = 'transactions';
 
     protected $fillable = [
         'user_id',
@@ -24,6 +23,8 @@ class Transaction extends Model
         'location',
         'receipt_url',
         'notes',
+        'currency',
+        'created_by_ai',
     ];
 
     protected $casts = [
@@ -31,13 +32,9 @@ class Transaction extends Model
         'date'         => 'datetime',
         'tags'         => 'array',
         'is_recurring' => 'boolean',
+        'created_by_ai' => 'boolean',
     ];
 
-    /**
-     * Ensure amount is always stored as a numeric (float) in MongoDB.
-     * MongoDB doesn't auto-cast strings to numbers, so $sum aggregation
-     * would return 0 if the value is stored as a string.
-     */
     public function setAmountAttribute($value)
     {
         $this->attributes['amount'] = (float) $value;

@@ -1,1392 +1,1039 @@
-@extends('layouts.app')
-
-@section('title', 'ড্যাশবোর্ড')
-@section('page-title', 'আর্থিক ড্যাশবোর্ড')
-
-@section('topbar-actions')
-<a href="{{ route('transactions.create') }}" class="btn btn-primary btn-sm">
-    <i class="fas fa-plus"></i> লেনদেন যোগ করুন
-</a>
-<button onclick="generateAI()" class="btn btn-outline btn-sm" id="ai-generate-btn">
-    <i class="fas fa-robot"></i> এআই রিফ্রেশ
-</button>
-@endsection
-
-@section('content')
-
-{{-- Dashboard-specific styles --}}
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>আর্থিক ড্যাশবোর্ড</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-    .dash-hero {
-        background: var(--dash-hero-bg);
-        border-radius: 16px;
-        padding: 34px;
-        margin-bottom: 24px;
-        position: relative;
-        overflow: hidden;
-        color: var(--dash-hero-text);
-        border: 1px solid var(--dash-hero-pill-border);
-        animation: hero-enter 0.65s ease;
-    }
-    .dash-hero::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image: linear-gradient(var(--dash-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--dash-grid-line) 1px, transparent 1px);
-        background-size: 36px 36px;
-        opacity: 0.2;
-        animation: grid-move 18s linear infinite;
-    }
-    .dash-hero::after {
-        content: '';
-        position: absolute;
-        top: -22%;
-        right: -8%;
-        width: 280px;
-        height: 280px;
-        border-radius: 50%;
-        background: radial-gradient(circle, color-mix(in oklab, var(--dash-hero-text) 24%, transparent) 0%, transparent 68%);
-    }
-    .dash-hero-inner {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 18px;
-        flex-wrap: wrap;
-    }
-    .dash-hero-greeting {
-        font-size: clamp(26px, 3vw, 38px);
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        margin-bottom: 10px;
-        line-height: 1.2;
-    }
-    .dash-hero-sub {
-        font-size: 14px;
-        color: var(--dash-hero-sub);
-        line-height: 1.7;
-        margin-bottom: 8px;
-    }
-    .dash-hero-date {
-        font-size: 12px;
-        color: var(--dash-hero-sub);
-    }
-    .dash-hero-pills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 14px;
-    }
-    .dash-quick-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 11px;
-        font-weight: 700;
-        border-radius: 999px;
-        padding: 6px 12px;
-        background: var(--dash-hero-pill-bg);
-        border: 1px solid var(--dash-hero-pill-border);
-        color: var(--dash-hero-pill-text);
-        backdrop-filter: blur(6px);
-    }
-    .dash-hero-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-self: center;
-    }
-    .dash-btn-glass {
-        background: var(--dash-glass-bg);
-        color: var(--dash-hero-pill-text);
-        padding: 11px 20px;
-        border-radius: 12px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        border: 1px solid var(--dash-glass-border);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-        text-decoration: none;
-    }
-    .dash-btn-glass:hover {
-        transform: translateY(-2px) scale(1.01);
-        background: var(--dash-glass-bg-hover);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
-    }
+:root {
+  --bg: #070b14;
+  --surface: #0d1525;
+  --surface2: #111d30;
+  --glass: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-hover: rgba(255,255,255,0.06);
+  --purple: #7c3aed;
+  --purple-light: #a78bfa;
+  --cyan: #06b6d4;
+  --cyan-light: #67e8f9;
+  --emerald: #10b981;
+  --emerald-light: #6ee7b7;
+  --rose: #f43f5e;
+  --rose-light: #fda4af;
+  --amber: #f59e0b;
+  --amber-light: #fcd34d;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --border: rgba(255,255,255,0.06);
+  --sidebar-w: 260px;
+}
 
-    .dash-period-bar {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 22px;
-        padding: 6px;
-        border-radius: 14px;
-        width: fit-content;
-        border: 1px solid var(--border);
-        background: color-mix(in oklab, var(--surface) 88%, transparent);
-        backdrop-filter: blur(6px);
-    }
-    .dash-period-pill {
-        padding: 8px 18px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        border: none;
-        background: transparent;
-        color: var(--gray);
-        transition: all 0.22s ease;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .dash-period-pill:hover {
-        background: var(--light);
-        color: var(--dark);
-    }
-    .dash-period-pill.active {
-        background: var(--primary);
-        color: #fff;
-        box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 36%, transparent);
-    }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .dash-title-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 9px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 8px;
-        background: linear-gradient(135deg, var(--primary), color-mix(in oklab, var(--primary) 72%, #ffffff));
-        color: #fff;
-        box-shadow: 0 6px 14px color-mix(in oklab, var(--primary) 35%, transparent);
-    }
+body {
+  font-family: 'DM Sans', 'Noto Sans Bengali', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-    .dash-stat-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-    }
-    .dash-stat-icon.balance {
-        background: color-mix(in oklab, var(--primary) 18%, transparent);
-        color: var(--primary);
-    }
-    .dash-stat-icon.income {
-        background: color-mix(in oklab, var(--success) 18%, transparent);
-        color: var(--success);
-    }
-    .dash-stat-icon.expense {
-        background: color-mix(in oklab, var(--danger) 18%, transparent);
-        color: var(--danger);
-    }
-    .dash-stat-icon.saving {
-        background: color-mix(in oklab, var(--info) 18%, transparent);
-        color: var(--info);
-    }
+/* ─── AMBIENT BACKGROUND ORBS ─── */
+.bg-orbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  animation: orb-drift 20s ease-in-out infinite alternate;
+}
+.orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%); top: -200px; left: -100px; animation-delay: 0s; }
+.orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%); top: 100px; right: -100px; animation-delay: -7s; }
+.orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%); bottom: -100px; left: 30%; animation-delay: -14s; }
+@keyframes orb-drift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(40px, 30px) scale(1.1); } }
 
-    .dash-stat-card {
-        background: color-mix(in oklab, var(--surface) 92%, transparent);
-        border-radius: 14px;
-        padding: 20px;
-        box-shadow: var(--card-shadow);
-        border: 1px solid var(--border);
-        backdrop-filter: blur(8px);
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
-    }
-    .dash-stat-card:hover {
-        transform: translateY(-5px) scale(1.01);
-        box-shadow: 0 18px 35px rgba(0, 0, 0, 0.24);
-    }
-    .dash-stat-card::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 4px;
-    }
-    .dash-stat-card.income::after { background: linear-gradient(90deg, var(--success), color-mix(in oklab, var(--success) 72%, #ffffff)); }
-    .dash-stat-card.expense::after { background: linear-gradient(90deg, var(--danger), color-mix(in oklab, var(--danger) 72%, #ffffff)); }
-    .dash-stat-card.saving::after { background: linear-gradient(90deg, var(--info), color-mix(in oklab, var(--info) 72%, #ffffff)); }
-    .dash-stat-card.balance::after { background: linear-gradient(90deg, var(--primary), color-mix(in oklab, var(--primary) 72%, #ffffff)); }
-    .dash-stat-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 14px;
-    }
-    .dash-stat-trend {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        border-radius: 999px;
-        padding: 4px 10px;
-        font-size: 11px;
-        font-weight: 700;
-    }
-    .dash-stat-trend.up {
-        background: rgba(34, 197, 94, 0.14);
-        color: #22c55e;
-    }
-    .dash-stat-trend.down {
-        background: rgba(239, 68, 68, 0.15);
-        color: #ef4444;
-    }
+/* ─── LAYOUT ─── */
+.layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
 
-    .dash-advisor-row {
-        display: grid;
-        grid-template-columns: 1.6fr 1fr;
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    .dash-ai-card {
-        background: var(--dash-ai-bg);
-        border-radius: 16px;
-        padding: 26px;
-        border: 1px solid var(--dash-ai-border);
-        color: var(--dash-ai-text);
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 18px 35px rgba(0, 0, 0, 0.32);
-    }
-    .dash-ai-card::before {
-        content: '';
-        position: absolute;
-        top: -45%;
-        right: -18%;
-        width: 280px;
-        height: 280px;
-        border-radius: 50%;
-        background: radial-gradient(circle, color-mix(in oklab, var(--dash-ai-text) 20%, transparent), transparent 72%);
-    }
-    .dash-ai-inner {
-        position: relative;
-        z-index: 1;
-    }
-    .dash-ai-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 5px 11px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--dash-ai-muted);
-        border: 1px solid var(--dash-ai-border);
-        background: var(--dash-ai-panel);
-        margin-bottom: 14px;
-    }
-    .dash-ai-limit {
-        font-size: clamp(28px, 4vw, 38px);
-        line-height: 1.1;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        margin-bottom: 6px;
-    }
-    .dash-ai-limit-label {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--dash-ai-muted);
-        margin-bottom: 14px;
-    }
-    .dash-ai-summary {
-        font-size: 13px;
-        line-height: 1.75;
-        color: var(--dash-ai-text);
-        background: var(--dash-ai-panel);
-        border-radius: 12px;
-        padding: 14px;
-        margin-bottom: 14px;
-        border-left: 3px solid var(--dash-ai-border);
-    }
-    .dash-ai-tip {
-        padding: 11px 13px;
-        border-radius: 10px;
-        margin-bottom: 8px;
-        background: var(--dash-ai-panel);
-        font-size: 13px;
-        line-height: 1.7;
-        transition: transform 0.16s ease, background 0.16s ease;
-    }
-    .dash-ai-tip:hover {
-        transform: translateX(4px);
-        background: color-mix(in oklab, var(--dash-ai-panel) 70%, var(--dash-ai-text));
-    }
-    .dash-ai-time {
-        margin-top: 14px;
-        font-size: 11px;
-        color: var(--dash-ai-muted);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .dash-ai-plan-title {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--dash-ai-muted);
-        margin-bottom: 10px;
-    }
-    .dash-ai-plan-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-    }
-    .dash-ai-plan-item {
-        background: var(--dash-ai-panel);
-        border-radius: 8px;
-        padding: 10px 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .dash-ai-plan-label {
-        font-size: 12px;
-        color: color-mix(in oklab, var(--dash-ai-text) 86%, transparent);
-    }
-    .dash-ai-plan-amount {
-        font-size: 13px;
-        font-weight: 700;
-        color: color-mix(in oklab, var(--dash-ai-text) 90%, transparent);
-    }
-    .dash-ai-plan-amount.ok {
-        color: var(--success);
-    }
-    .dash-ai-plan-amount.over {
-        color: var(--danger);
-    }
-    .dash-ai-saving-row {
-        background: color-mix(in oklab, var(--success) 18%, transparent);
-        border-radius: 8px;
-        padding: 10px 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        grid-column: span 2;
-    }
-    .dash-ai-saving-label {
-        font-size: 12px;
-        color: var(--success);
-        font-weight: 700;
-    }
-    .dash-ai-saving-value {
-        font-size: 14px;
-        font-weight: 800;
-        color: var(--success);
-    }
-    .dash-ai-rule {
-        font-size: 11px;
-        color: var(--dash-ai-muted);
-        margin-top: 8px;
-        line-height: 1.5;
-    }
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: rgba(13,21,37,0.7);
+  border-right: 1px solid var(--border);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  padding: 28px 20px;
+}
 
-    .dash-finscore-card {
-        background: color-mix(in oklab, var(--surface) 90%, transparent);
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        padding: 26px;
-        text-align: center;
-        backdrop-filter: blur(8px);
-        box-shadow: var(--card-shadow);
-    }
-    .dash-finscore-title {
-        font-size: 16px;
-        font-weight: 800;
-        margin-bottom: 18px;
-    }
-    .dash-finscore-ring {
-        position: relative;
-        width: 160px;
-        height: 160px;
-        margin: 0 auto 16px;
-    }
-    .dash-finscore-value {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-    }
-    .dash-finscore-number {
-        font-size: 38px;
-        font-weight: 800;
-        line-height: 1;
-    }
-    .dash-finscore-max,
-    .dash-finscore-label {
-        font-size: 12px;
-        color: var(--gray);
-        font-weight: 600;
-    }
-    .dash-finscore-status {
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+  padding: 0 4px;
+}
+.logo-icon {
+  width: 42px; height: 42px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--purple), #a855f7);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 24px rgba(124,58,237,0.5);
+}
+.logo-text { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; background: linear-gradient(135deg, #f1f5f9, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.logo-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
 
-    .dash-charts-grid {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr;
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    .dash-chart-card,
-    .dash-table-card {
-        background: color-mix(in oklab, var(--surface) 92%, transparent);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 22px;
-        box-shadow: var(--card-shadow);
-        backdrop-filter: blur(8px);
-    }
-    .dash-chart-header,
-    .dash-table-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 14px;
-        flex-wrap: wrap;
-    }
-    .dash-chart-title,
-    .dash-table-title {
-        font-size: 16px;
-        font-weight: 800;
-        line-height: 1.4;
-    }
-    .dash-chart-controls {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .dash-chart-select {
-        font-size: 12px;
-        padding: 6px 10px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        background: var(--surface);
-        color: var(--dark);
-        font-weight: 700;
-        outline: none;
-    }
-    .dash-chart-toggle {
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: transparent;
-        color: var(--gray);
-        padding: 6px 10px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    .dash-chart-toggle.active,
-    .dash-chart-toggle:hover {
-        color: #fff;
-        background: var(--primary);
-        border-color: var(--primary);
-    }
+.nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin: 8px 8px 8px; }
 
-    .dash-budget-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 14px;
-    }
-    .dash-budget-item {
-        padding: 16px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        background: color-mix(in oklab, var(--surface) 88%, transparent);
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
-    }
-    .dash-budget-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.17);
-    }
-    .dash-budget-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    .dash-budget-cat {
-        font-size: 13px;
-        font-weight: 700;
-    }
-    .dash-budget-pct {
-        font-size: 11px;
-        font-weight: 700;
-        border-radius: 999px;
-        padding: 3px 9px;
-    }
-    .dash-budget-amounts {
-        margin-top: 9px;
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: var(--gray);
-    }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--glass-hover); color: var(--text-primary); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(168,85,247,0.1));
+  color: var(--purple-light);
+  border: 1px solid rgba(124,58,237,0.25);
+}
+.nav-item .nav-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.nav-item.active .nav-icon { background: rgba(124,58,237,0.2); }
+.nav-item:not(.active) .nav-icon { background: rgba(255,255,255,0.04); }
+.nav-badge { margin-left: auto; background: rgba(124,58,237,0.2); color: var(--purple-light); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
 
-    .dash-anomaly-card {
-        display: flex;
-        align-items: flex-start;
-        gap: 14px;
-        padding: 15px 16px;
-        border-radius: 12px;
-        border: 1px solid rgba(245, 158, 11, 0.45);
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.1));
-        margin-bottom: 10px;
-        transition: transform 0.16s ease;
-    }
-    .dash-anomaly-card:hover {
-        transform: translateX(4px);
-    }
-    .dash-anomaly-msg {
-        font-size: 13px;
-        font-weight: 700;
-        line-height: 1.6;
-    }
-    .dash-anomaly-meta {
-        font-size: 11px;
-        color: var(--gray);
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
+.sidebar-user {
+  margin-top: auto;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.avatar {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.user-name { font-size: 14px; font-weight: 600; }
+.user-role { font-size: 11px; color: var(--text-muted); }
+.user-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 6px var(--emerald); margin-left: auto; flex-shrink: 0; }
 
-    .dash-transactions-tools {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .dash-filter-input {
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: var(--surface);
-        color: var(--dark);
-        padding: 7px 10px;
-        font-size: 12px;
-        min-width: 170px;
-    }
-    .dash-filter-input::placeholder {
-        color: var(--gray);
-    }
+/* ─── MAIN ─── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-    .progress-fill {
-        transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
-    }
+/* ─── TOPBAR ─── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 36px;
+  background: rgba(7,11,20,0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+}
+.page-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+.page-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
 
-    @keyframes hero-enter {
-        from { opacity: 0; transform: translateY(14px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes grid-move {
-        from { transform: translateX(0); }
-        to { transform: translateX(-36px); }
-    }
+.search-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-size: 13px; color: var(--text-secondary);
+  cursor: pointer;
+  min-width: 200px;
+}
+.search-bar input { background: none; border: none; outline: none; color: var(--text-secondary); font-family: inherit; font-size: 13px; flex: 1; }
+.search-bar input::placeholder { color: var(--text-muted); }
 
-    @media (max-width: 1024px) {
-        .dash-advisor-row,
-        .dash-charts-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    @media (max-width: 768px) {
-        .dash-hero {
-            padding: 24px 20px;
-        }
-        .dash-hero-inner {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .dash-period-bar {
-            width: 100%;
-            overflow-x: auto;
-        }
-        .dash-chart-controls,
-        .dash-transactions-tools {
-            width: 100%;
-            justify-content: flex-start;
-        }
-        .dash-filter-input {
-            min-width: 0;
-            width: 100%;
-        }
-    }
+.icon-btn {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.icon-btn:hover { background: var(--glass-hover); color: var(--text-primary); border-color: rgba(255,255,255,0.12); }
+.notif-dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--rose); border: 1.5px solid var(--bg); }
+
+.btn-new-tx {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--purple), #a855f7);
+  color: #fff; font-weight: 600; font-size: 14px;
+  border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+  transition: all 0.2s;
+}
+.btn-new-tx:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,58,237,0.5); }
+
+/* ─── CONTENT ─── */
+.content { padding: 32px 36px; flex: 1; }
+
+/* ─── HERO BANNER ─── */
+.hero-banner {
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  margin-bottom: 32px;
+  padding: 36px 40px;
+  background: linear-gradient(135deg, #1a0d3d 0%, #0d1f3c 50%, #0a2a2a 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.hero-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 10% 50%, rgba(124,58,237,0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 20%, rgba(6,182,212,0.2) 0%, transparent 45%),
+    radial-gradient(ellipse at 60% 90%, rgba(16,185,129,0.15) 0%, transparent 40%);
+}
+.hero-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M0 0h40v40H0V0zm40 40h40v40H40V40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-inner { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px; }
+.hero-greeting { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; }
+.hero-greeting .wave { display: inline-block; animation: wave 2.5s ease-in-out infinite; }
+@keyframes wave { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(20deg); } 75% { transform: rotate(-10deg); } }
+.hero-sub { font-size: 14px; color: rgba(255,255,255,0.65); max-width: 480px; line-height: 1.7; }
+.hero-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.hero-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 50px;
+  font-size: 13px; font-weight: 600;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s;
+}
+.pill-balance { background: rgba(124,58,237,0.2); border: 1px solid rgba(124,58,237,0.35); color: var(--purple-light); }
+.pill-savings { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: var(--emerald-light); }
+.pill-score { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.3); color: var(--cyan-light); }
+.hero-pill:hover { transform: translateY(-2px); }
+
+.hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; }
+.hero-kpi {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 20px 28px;
+  text-align: right;
+  backdrop-filter: blur(16px);
+  min-width: 200px;
+}
+.hero-kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); font-weight: 600; margin-bottom: 6px; }
+.hero-kpi-value { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; background: linear-gradient(135deg, #e9d5ff, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+.hero-kpi-change { font-size: 12px; color: var(--emerald-light); margin-top: 6px; }
+
+/* ─── STATS GRID ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  position: relative;
+  border-radius: 24px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 24px 24px 0 0;
+}
+.stat-card:hover { transform: translateY(-6px); border-color: rgba(255,255,255,0.12); box-shadow: 0 24px 48px rgba(0,0,0,0.4); }
+
+.stat-card.purple::before { background: linear-gradient(90deg, var(--purple), #a855f7); }
+.stat-card.emerald::before { background: linear-gradient(90deg, var(--emerald), #34d399); }
+.stat-card.rose::before { background: linear-gradient(90deg, var(--rose), #fb7185); }
+.stat-card.cyan::before { background: linear-gradient(90deg, var(--cyan), #22d3ee); }
+
+.stat-glow {
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.15;
+}
+.purple .stat-glow { background: var(--purple); }
+.emerald .stat-glow { background: var(--emerald); }
+.rose .stat-glow { background: var(--rose); }
+.cyan .stat-glow { background: var(--cyan); }
+
+.stat-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.purple .stat-icon { background: rgba(124,58,237,0.15); color: var(--purple-light); }
+.emerald .stat-icon { background: rgba(16,185,129,0.15); color: var(--emerald-light); }
+.rose .stat-icon { background: rgba(244,63,94,0.15); color: var(--rose-light); }
+.cyan .stat-icon { background: rgba(6,182,212,0.15); color: var(--cyan-light); }
+
+.stat-trend {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 700;
+  padding: 5px 10px; border-radius: 99px;
+}
+.trend-up { background: rgba(16,185,129,0.12); color: var(--emerald-light); }
+.trend-down { background: rgba(244,63,94,0.12); color: var(--rose-light); }
+
+.stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.stat-value { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; line-height: 1.1; color: var(--text-primary); margin-bottom: 8px; }
+.stat-sub { font-size: 12px; color: var(--text-muted); }
+
+/* ─── MAIN GRID ─── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+/* ─── CARD BASE ─── */
+.card {
+  border-radius: 24px;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+.card:hover { border-color: rgba(255,255,255,0.1); }
+
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.card-title {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700;
+}
+.card-title-icon {
+  width: 36px; height: 36px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.icon-purple { background: rgba(124,58,237,0.15); color: var(--purple-light); }
+.icon-emerald { background: rgba(16,185,129,0.15); color: var(--emerald-light); }
+.icon-cyan { background: rgba(6,182,212,0.15); color: var(--cyan-light); }
+.icon-rose { background: rgba(244,63,94,0.15); color: var(--rose-light); }
+.icon-amber { background: rgba(245,158,11,0.15); color: var(--amber-light); }
+
+.btn-outline-sm {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 12px;
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  background: var(--glass); border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-outline-sm:hover { background: var(--glass-hover); color: var(--text-primary); }
+
+/* ─── AI CARD ─── */
+.ai-card {
+  background: linear-gradient(145deg, #1a0d3d, #0d1f3c, #0a2220);
+  border: 1px solid rgba(124,58,237,0.2);
+  position: relative; overflow: hidden;
+}
+.ai-card::before {
+  content: '';
+  position: absolute;
+  top: -40%; right: -20%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 60%);
+  animation: pulse-ai 6s ease-in-out infinite;
+}
+@keyframes pulse-ai { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+.ai-inner { position: relative; z-index: 1; }
+.ai-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.ai-avatar {
+  width: 50px; height: 50px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--purple), #ec4899);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 8px 24px rgba(124,58,237,0.5);
+  animation: avatar-glow 3s ease-in-out infinite;
+}
+@keyframes avatar-glow { 0%,100% { box-shadow: 0 8px 24px rgba(124,58,237,0.5); } 50% { box-shadow: 0 8px 32px rgba(124,58,237,0.8); } }
+.ai-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #fff; }
+.ai-status { font-size: 12px; color: rgba(255,255,255,0.45); display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+.ai-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); animation: blink 2s ease-in-out infinite; }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.ai-score-wrap { margin-bottom: 20px; padding: 18px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; display: flex; align-items: center; gap: 20px; }
+.ai-score-ring { position: relative; width: 70px; height: 70px; flex-shrink: 0; }
+.ai-score-ring svg { transform: rotate(-90deg); }
+.ai-score-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+.ai-score-num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--purple-light); }
+.ai-score-label { font-size: 10px; color: rgba(255,255,255,0.4); }
+.ai-score-info { flex: 1; }
+.ai-score-title { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); margin-bottom: 4px; }
+.ai-score-desc { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+.ai-insight {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.8);
+}
+.ai-insight strong { color: var(--purple-light); }
+
+.ai-tip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px; color: rgba(255,255,255,0.75);
+  margin-bottom: 6px;
+  transition: all 0.2s;
+}
+.ai-tip:hover { background: rgba(255,255,255,0.07); transform: translateX(4px); }
+.ai-tip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-purple { background: var(--purple-light); box-shadow: 0 0 6px var(--purple); }
+.dot-cyan { background: var(--cyan-light); box-shadow: 0 0 6px var(--cyan); }
+.dot-emerald { background: var(--emerald-light); box-shadow: 0 0 6px var(--emerald); }
+
+/* ─── FINSCORE CARD ─── */
+.finscore-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+.finscore-ring-outer { position: relative; width: 210px; height: 210px; margin: 0 auto 24px; }
+.finscore-ring-outer svg { transform: rotate(-90deg); filter: drop-shadow(0 0 16px rgba(124,58,237,0.4)); }
+.finscore-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.finscore-num { font-family: 'Syne', sans-serif; font-size: 52px; font-weight: 800; background: linear-gradient(135deg, var(--purple-light), var(--cyan-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+.finscore-max { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+.finscore-status { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.finscore-desc { font-size: 13px; color: var(--text-muted); max-width: 240px; line-height: 1.6; }
+.finscore-bars { width: 100%; margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+.fsbar-row { display: flex; align-items: center; gap: 12px; }
+.fsbar-label { font-size: 12px; color: var(--text-muted); width: 80px; text-align: right; }
+.fsbar-track { flex: 1; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.fsbar-fill { height: 100%; border-radius: 99px; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
+.fsbar-val { font-size: 12px; font-weight: 700; width: 36px; text-align: left; }
+
+/* ─── CHART CARD ─── */
+.chart-card { margin-bottom: 28px; }
+.chart-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; }
+.chart-tab { padding: 8px 18px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+.chart-tab.active { background: rgba(124,58,237,0.2); color: var(--purple-light); }
+.chart-wrap { height: 280px; margin-top: 20px; position: relative; }
+
+/* ─── BOTTOM GRID ─── */
+.bottom-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-bottom: 28px; }
+
+/* ─── TRANSACTIONS TABLE ─── */
+.tx-table { width: 100%; border-collapse: collapse; }
+.tx-table thead th { padding: 0 16px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); border-bottom: 1px solid var(--border); text-align: left; }
+.tx-table thead th:last-child { text-align: right; }
+.tx-row { transition: background 0.15s; }
+.tx-row:hover td { background: rgba(255,255,255,0.02); }
+.tx-row td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; vertical-align: middle; }
+.tx-row:last-child td { border-bottom: none; }
+
+.tx-cat { display: flex; align-items: center; gap: 10px; }
+.tx-cat-icon { width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.tx-cat-name { font-weight: 600; font-size: 13px; }
+.tx-cat-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.tx-type { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.type-income { background: rgba(16,185,129,0.12); color: var(--emerald-light); }
+.type-expense { background: rgba(244,63,94,0.12); color: var(--rose-light); }
+.type-saving { background: rgba(6,182,212,0.12); color: var(--cyan-light); }
+
+.tx-amount { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; text-align: right; }
+.amount-income { color: var(--emerald-light); }
+.amount-expense { color: var(--rose-light); }
+.amount-saving { color: var(--cyan-light); }
+
+/* ─── BUDGET CARDS ─── */
+.budget-list { display: flex; flex-direction: column; gap: 14px; }
+.budget-card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px 20px;
+  transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.budget-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.budget-ok::before { background: linear-gradient(90deg, var(--emerald), #34d399); }
+.budget-warn::before { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+.budget-danger::before { background: linear-gradient(90deg, var(--rose), #fb7185); }
+.budget-card:hover { background: var(--glass-hover); border-color: rgba(255,255,255,0.1); }
+.budget-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.budget-cat { display: flex; align-items: center; gap: 10px; }
+.budget-cat-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.budget-cat-name { font-size: 14px; font-weight: 600; }
+.budget-pct { font-size: 13px; font-weight: 800; padding: 4px 12px; border-radius: 99px; }
+.pct-ok { background: rgba(16,185,129,0.12); color: var(--emerald-light); }
+.pct-warn { background: rgba(245,158,11,0.12); color: var(--amber-light); }
+.pct-danger { background: rgba(244,63,94,0.12); color: var(--rose-light); }
+.budget-bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; margin-bottom: 10px; }
+.budget-fill { height: 100%; border-radius: 99px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+.bar-ok { background: linear-gradient(90deg, var(--emerald), #34d399); }
+.bar-warn { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+.bar-danger { background: linear-gradient(90deg, var(--rose), #fb7185); }
+.budget-amounts { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+
+/* ─── ANOMALY ─── */
+.anomaly-wrap { margin-bottom: 28px; }
+.anomaly-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(244,63,94,0.04));
+  border: 1px solid rgba(245,158,11,0.2);
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+.anomaly-card:hover { background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(244,63,94,0.07)); }
+.anomaly-icon-wrap { width: 38px; height: 38px; border-radius: 12px; background: rgba(245,158,11,0.15); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.anomaly-msg { font-size: 13px; color: var(--amber-light); font-weight: 500; line-height: 1.6; }
+.anomaly-meta { font-size: 11px; color: var(--text-muted); margin-top: 5px; display: flex; gap: 12px; flex-wrap: wrap; }
+.anomaly-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; background: rgba(255,255,255,0.05); border-radius: 99px; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+
+/* ─── ANIMATIONS ─── */
+.fade-up { animation: fadeUp 0.6s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; } .delay-5 { animation-delay: 0.5s; }
 </style>
+</head>
+<body>
 
-@php
-    $catLabels = array_merge(\App\Models\Transaction::expenseCategories(), \App\Models\Transaction::incomeCategories());
-    $typeLabels = ['income'=>'আয়','expense'=>'খরচ','saving'=>'সঞ্চয়'];
-    $periodLabels = ['daily'=>'দৈনিক','weekly'=>'সাপ্তাহিক','monthly'=>'মাসিক','annual'=>'বার্ষিক'];
-@endphp
-
-{{-- ============================================================ --}}
-{{-- 1. WELCOME HERO SECTION                                      --}}
-{{-- ============================================================ --}}
-<div class="dash-hero">
-    <div class="dash-hero-inner">
-        <div>
-            <div class="dash-hero-greeting">শুভেচ্ছা, {{ $user->name }}! 👋</div>
-            <div class="dash-hero-sub">আজকের আর্থিক অবস্থার মূল তথ্য এক নজরে দেখুন, তারপর নিচের action দিয়ে দ্রুত update করুন।</div>
-            <div class="dash-hero-date"><i class="far fa-calendar-alt"></i> {{ now()->translatedFormat('l, d F Y') }}</div>
-            <div class="dash-hero-pills">
-                <span class="dash-quick-pill"><i class="fas fa-wallet"></i> Today: {{ $user->currency }}{{ number_format($todayStats['net_balance'] ?? 0, 0) }}</span>
-                <span class="dash-quick-pill"><i class="fas fa-chart-line"></i> Month trend: {{ $monthStats['net_balance'] >= 0 ? 'Positive' : 'Negative' }}</span>
-                <span class="dash-quick-pill"><i class="fas fa-shield-heart"></i> FinScore: {{ $finScore }}/100</span>
-            </div>
-        </div>
-        <div class="dash-hero-actions">
-            <a href="{{ route('transactions.create') }}" class="dash-btn-glass">
-                <i class="fas fa-plus-circle"></i> লেনদেন যোগ করুন
-            </a>
-            <button onclick="generateAI()" class="dash-btn-glass" id="ai-generate-btn-hero">
-                <i class="fas fa-robot"></i> এআই রিফ্রেশ
-            </button>
-        </div>
-    </div>
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
 </div>
 
-{{-- ============================================================ --}}
-{{-- 2. PERIOD SELECTOR (PILL STYLE)                              --}}
-{{-- ============================================================ --}}
-<div class="dash-period-bar">
-    @foreach(['daily', 'weekly', 'monthly', 'annual'] as $p)
-        <button onclick="switchPeriod('{{ $p }}')"
-            class="dash-period-pill {{ $p === 'monthly' ? 'active' : '' }}"
-            id="period-btn-{{ $p }}">
-            {{ $periodLabels[$p] }}
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">💎</div>
+      <div>
+        <div class="logo-text">Life Pilot</div>
+        <div class="logo-sub">আর্থিক ব্যবস্থাপনা</div>
+      </div>
+    </div>
+
+    <div class="nav-label">মূল মেনু</div>
+    <a href="#" class="nav-item active">
+      <div class="nav-icon"><i class="fas fa-grid-2"></i></div>
+      ড্যাশবোর্ড
+    </a>
+    <a href="#" class="nav-item">
+      <div class="nav-icon"><i class="fas fa-exchange-alt"></i></div>
+      লেনদেন
+      <span class="nav-badge">12</span>
+    </a>
+    <a href="#" class="nav-item">
+      <div class="nav-icon"><i class="fas fa-wallet"></i></div>
+      বাজেট
+    </a>
+    <a href="#" class="nav-item">
+      <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
+      বিশ্লেষণ
+    </a>
+    <a href="#" class="nav-item">
+      <div class="nav-icon"><i class="fas fa-robot"></i></div>
+      AI সহায়ক
+    </a>
+
+    <div class="nav-label" style="margin-top:16px;">সেটিংস</div>
+    <a href="#" class="nav-item">
+      <div class="nav-icon"><i class="fas fa-cog"></i></div>
+      পছন্দসমূহ
+    </a>
+    <a href="#" class="nav-item">
+      <div class="nav-icon"><i class="fas fa-shield-alt"></i></div>
+      নিরাপত্তা
+    </a>
+
+      <div class="sidebar-user">
+      <div class="avatar">{{ $user->avatar ?? \Illuminate\Support\Str::substr($user->name ?? '', 0, 1) }}</div>
+      <div>
+        <div class="user-name">{{ $user->name ?? 'ব্যবহারকারী' }}</div>
+        <div class="user-role">{{ $user->profile_complete ? 'প্রিমিয়াম সদস্য' : 'সাধারণ সদস্য' }}</div>
+      </div>
+      <div class="user-dot"></div>
+      <form method="POST" action="{{ route('logout') }}" style="margin-left:auto;">
+        @csrf
+        <button type="submit" style="background: none; border: none; color: var(--rose-light); font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 6px; font-weight:500;">লগআউট</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <div class="page-title">ড্যাশবোর্ড</div>
+        <div class="page-sub">এপ্রিল ২০২৬ — সর্বশেষ আপডেট ২ মিনিট আগে</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-bar">
+          <i class="fas fa-search" style="color:var(--text-muted);font-size:13px;"></i>
+          <input type="text" placeholder="খুঁজুন..."/>
+          <span style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:6px;">⌘K</span>
+        </div>
+        <div class="icon-btn"><i class="fas fa-bell"></i><div class="notif-dot"></div></div>
+        <div class="icon-btn"><i class="fas fa-sun"></i></div>
+        <button class="btn-new-tx">
+          <i class="fas fa-plus"></i>
+          নতুন লেনদেন
         </button>
-    @endforeach
-</div>
-
-{{-- ============================================================ --}}
-{{-- 3. STAT CARDS GRID                                           --}}
-{{-- ============================================================ --}}
-<div class="stat-grid" id="stats-grid">
-    {{-- Card 1: Net Balance --}}
-    <div class="dash-stat-card balance">
-        <div class="dash-stat-header">
-            <div class="dash-stat-icon balance">
-                <i class="fas fa-balance-scale"></i>
-            </div>
-            @if($monthStats['net_balance'] >= 0)
-                <div class="dash-stat-trend up"><i class="fas fa-arrow-up" style="font-size:9px;"></i> 3 month trend up</div>
-            @else
-                <div class="dash-stat-trend down"><i class="fas fa-arrow-down" style="font-size:9px;"></i> 3 month trend down</div>
-            @endif
-        </div>
-        <div class="stat-label">নিট ব্যালেন্স</div>
-        <div class="stat-value" id="stat-balance"
-            style="color:{{ $monthStats['net_balance'] >= 0 ? 'var(--success)' : 'var(--danger)' }}">
-            {{ $user->currency }}{{ number_format($monthStats['net_balance'], 0) }}
-        </div>
-        <div class="stat-sub">গত ৩ মাসের net অবস্থার সারাংশ</div>
+      </div>
     </div>
 
-    {{-- Card 2: Income vs Expense --}}
-    <div class="dash-stat-card income">
-        <div class="dash-stat-header">
-            <div class="dash-stat-icon income">
-                <i class="fas fa-chart-column"></i>
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- HERO BANNER -->
+      <div class="hero-banner fade-up">
+        <div class="hero-inner">
+          <div>
+            <div class="hero-greeting">
+              সুপ্রভাত, <span style="background:linear-gradient(135deg,#e9d5ff,#a5f3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{{ $user->name ?? 'ব্যবহারকারী' }}</span> <span class="wave">👋</span>
             </div>
-            <div class="dash-stat-trend {{ $monthStats['monthly_income'] >= $monthStats['monthly_expense'] ? 'up' : 'down' }}">
-                <i class="fas {{ $monthStats['monthly_income'] >= $monthStats['monthly_expense'] ? 'fa-arrow-up' : 'fa-arrow-down' }}" style="font-size:9px;"></i>
-                Income vs Expense
+            <div class="hero-sub">আপনার আর্থিক স্বাস্থ্য আজ বেশ ভালো। AI বিশ্লেষণ বলছে এই মাসে ব্যয় ১৮% কমেছে।</div>
+            <div class="hero-pills">
+              <div class="hero-pill pill-balance"><i class="fas fa-wallet" style="font-size:12px;"></i> ৳৪৫,২৩০ মাসিক ব্যালেন্স</div>
+              <div class="hero-pill pill-savings"><i class="fas fa-piggy-bank" style="font-size:12px;"></i> ৩২% সঞ্চয়ের হার</div>
+              <div class="hero-pill pill-score"><i class="fas fa-star" style="font-size:12px;"></i> ৭৮ FinScore</div>
             </div>
+          </div>
+          <div class="hero-right">
+          <div class="hero-kpi">
+              <div class="hero-kpi-label">মোট ব্যালেন্স</div>
+              <div class="hero-kpi-value">৳{{ number_format($monthStats->balance ?? 0, 0) }}</div>
+              <div class="hero-kpi-change"><i class="fas fa-arrow-up" style="font-size:10px;"></i> FinScore: {{ $finScore ?? 0 }}</div>
+            </div>
+          </div>
         </div>
-        <div class="stat-label">মাসিক আয় বনাম খরচ</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <div>
-                <div style="font-size:11px;color:var(--gray);margin-bottom:2px;">আয়</div>
-                <div class="stat-value" id="stat-income" style="font-size:22px;color:var(--success);">{{ $user->currency }}{{ number_format($monthStats['monthly_income'], 0) }}</div>
-            </div>
-            <div>
-                <div style="font-size:11px;color:var(--gray);margin-bottom:2px;">খরচ</div>
-                <div class="stat-value" id="stat-expense" style="font-size:22px;color:var(--danger);">{{ $user->currency }}{{ number_format($monthStats['monthly_expense'], 0) }}</div>
-            </div>
+      </div>
+
+      <!-- STATS GRID -->
+      <div class="stats-grid fade-up delay-1">
+        <div class="stat-card purple">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-trend trend-up"><i class="fas fa-arrow-up" style="font-size:10px;"></i> {{ round(($monthStats->income ?? 0) / ($monthStats->expense ?? 1) * 100) }}%</div>
+          </div>
+          <div class="stat-label">মোট ব্যালেন্স</div>
+          <div class="stat-value">৳{{ number_format($monthStats->balance ?? 0, 0) }}</div>
+          <div class="stat-sub">মাসিক: {{ $user->monthly_income ? number_format($user->monthly_income, 0) : 'N/A' }}</div>
         </div>
-        <div class="stat-sub">আজকের খরচ: {{ $user->currency }}<span id="today-expense">{{ number_format($todayStats['monthly_expense'] ?? 0, 0) }}</span></div>
-    </div>
-
-    {{-- Card 3: Savings Rate --}}
-    <div class="dash-stat-card saving">
-        <div class="dash-stat-header">
-            <div class="dash-stat-icon saving">
-                <i class="fas fa-piggy-bank"></i>
-            </div>
-            <div class="dash-stat-trend up"><i class="fas fa-bullseye" style="font-size:9px;"></i> Savings target</div>
+        <div class="stat-card emerald">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <div class="stat-icon"><i class="fas fa-arrow-down"></i></div>
+            <div class="stat-trend trend-up"><i class="fas fa-arrow-up" style="font-size:10px;"></i> ৮.৩%</div>
+          </div>
+          <div class="stat-label">মোট আয়</div>
+          <div class="stat-value">৳৪৫,২৩০</div>
+          <div class="stat-sub">এপ্রিল ২০২৬</div>
         </div>
-        <div class="stat-label">Savings Rate</div>
-        <div style="display:flex;align-items:center;gap:14px;">
-            <div class="stat-value" id="stat-saving" style="font-size:22px;">{{ $user->currency }}{{ number_format($monthStats['monthly_saving'], 0) }}</div>
-            <div style="width:62px;height:62px;border-radius:50%;border:5px solid color-mix(in oklab, var(--info) 26%, transparent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--info);">
-                <span id="savings-rate">{{ $monthStats['savings_rate'] }}</span>%
-            </div>
+        <div class="stat-card rose">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
+            <div class="stat-trend trend-down"><i class="fas fa-arrow-down" style="font-size:10px;"></i> ১৮%</div>
+          </div>
+          <div class="stat-label">মোট ব্যয়</div>
+          <div class="stat-value">৳৩০,৭৫৬</div>
+          <div class="stat-sub">বাজেটের ৬৮% ব্যবহৃত</div>
         </div>
-        <div class="stat-sub">মাসিক সঞ্চয়ের হার</div>
-    </div>
+        <div class="stat-card cyan">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <div class="stat-icon"><i class="fas fa-piggy-bank"></i></div>
+            <div class="stat-trend trend-up"><i class="fas fa-arrow-up" style="font-size:10px;"></i> ২৩%</div>
+          </div>
+          <div class="stat-label">মোট সঞ্চয়</div>
+          <div class="stat-value">৳১৪,৪৭৪</div>
+          <div class="stat-sub">লক্ষ্যমাত্রার ৮৮%</div>
+        </div>
+      </div>
 
-</div>
+      <!-- CHART -->
+      <div class="card chart-card fade-up delay-2">
+        <div class="card-head">
+          <div class="card-title">
+            <div class="card-title-icon icon-purple"><i class="fas fa-chart-bar"></i></div>
+            মাসিক আয় বনাম ব্যয়
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="chart-tabs">
+              <div class="chart-tab active">৬ মাস</div>
+              <div class="chart-tab">১ বছর</div>
+              <div class="chart-tab">সব</div>
+            </div>
+            <div class="btn-outline-sm"><i class="fas fa-download"></i> রিপোর্ট</div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
 
-{{-- ============================================================ --}}
-{{-- 4. FINSCORE + AI ADVISOR COMBINED ROW                        --}}
-{{-- ============================================================ --}}
-<div class="dash-advisor-row">
+      <!-- MAIN GRID: AI + FINSCORE -->
+      <div class="main-grid fade-up delay-3">
+        <!-- AI Card -->
+        <div class="card ai-card">
+          <div class="ai-inner">
+            <div class="ai-head">
+              <div class="ai-avatar">🤖</div>
+              <div>
+                <div class="ai-title">AI আর্থিক সহায়ক</div>
+                <div class="ai-status"><div class="ai-dot"></div> সক্রিয় · ৫ মিনিট আগে আপডেট</div>
+              </div>
+            </div>
 
-    {{-- LEFT: AI Advisor Card --}}
-    <div class="dash-ai-card">
-        <div class="dash-ai-inner">
-            <div class="dash-ai-badge"><i class="fas fa-robot"></i> এআই আর্থিক উপদেষ্টা</div>
-
-            @if($latestAI)
-                <div class="dash-ai-limit-label">আজকের দৈনিক সীমা</div>
-                <div class="dash-ai-limit">{{ $user->currency }}<span id="ai-daily-limit">{{ number_format($latestAI->daily_limit, 0) }}</span></div>
-
-                <div class="dash-ai-summary">
-                    {{ $latestAI->suggestion_data['financial_health_summary'] ?? 'আপনার অর্থ বিশ্লেষণ করা হচ্ছে...' }}
+            <div class="ai-score-wrap">
+              <div class="ai-score-ring">
+                <svg width="70" height="70" viewBox="0 0 70 70">
+                  <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+                  <circle id="ai-ring" cx="35" cy="35" r="28" fill="none" stroke="url(#aiGrad)" stroke-width="6" stroke-linecap="round"
+                    stroke-dasharray="175.9" stroke-dashoffset="37.6"/>
+                  <defs>
+                    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#7c3aed"/>
+                      <stop offset="100%" stop-color="#ec4899"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="ai-score-center">
+                  <div class="ai-score-num">৭৮</div>
+                  <div class="ai-score-label">/১০০</div>
                 </div>
-
-                {{-- Category-wise Budget Plan --}}
-                @if(!empty($latestAI->suggestion_data['budget_plan']['items']))
-                <div style="margin-bottom:16px;">
-                    <div class="dash-ai-plan-title">
-                        📋 বিভাগ অনুযায়ী মাসিক বাজেট পরিকল্পনা
-                    </div>
-                    <div class="dash-ai-plan-grid">
-                        @foreach($latestAI->suggestion_data['budget_plan']['items'] as $bItem)
-                            <div class="dash-ai-plan-item">
-                                <span class="dash-ai-plan-label">{{ $bItem['label'] }}</span>
-                                <span class="dash-ai-plan-amount {{ $bItem['status'] === 'over' ? 'over' : ($bItem['status'] === 'ok' ? 'ok' : '') }}">
-                                    {{ $user->currency }}{{ number_format($bItem['recommended'], 0) }}
-                                </span>
-                            </div>
-                        @endforeach
-                        {{-- Savings row --}}
-                        @if(!empty($latestAI->suggestion_data['budget_plan']['savings']))
-                            <div class="dash-ai-saving-row">
-                                <span class="dash-ai-saving-label">💰 সঞ্চয় ({{ $latestAI->suggestion_data['budget_plan']['savings']['percentage'] }}%)</span>
-                                <span class="dash-ai-saving-value">
-                                    {{ $user->currency }}{{ number_format($latestAI->suggestion_data['budget_plan']['savings']['recommended'], 0) }}
-                                </span>
-                            </div>
-                        @endif
-                    </div>
-                    <div class="dash-ai-rule">
-                        {{ $latestAI->suggestion_data['budget_plan']['rule_explanation'] ?? '' }}
-                    </div>
-                </div>
-                @endif
-
-                @foreach(($latestAI->tips ?? []) as $tip)
-                    <div class="dash-ai-tip">💡 {{ $tip }}</div>
-                @endforeach
-
-                <div class="dash-ai-time">
-                    <i class="far fa-clock"></i>
-                    সর্বশেষ আপডেট: {{ $latestAI->generated_at?->diffForHumans() ?? 'এইমাত্র' }}
-                </div>
-            @else
-                <div class="dash-ai-limit-label">এখনো কোনো পরামর্শ তৈরি হয়নি</div>
-                <div class="dash-ai-summary">
-                    লেনদেন যোগ করুন এবং "এআই রিফ্রেশ" বাটনে ক্লিক করুন — ব্যক্তিগতকৃত আর্থিক পরামর্শ পেতে।
-                </div>
-                <button onclick="generateAI()" class="dash-btn-glass" style="margin-top:8px;">
-                    <i class="fas fa-robot"></i> এখনই তৈরি করুন
-                </button>
-            @endif
-        </div>
-    </div>
-
-    {{-- RIGHT: FinScore Ring --}}
-    <div class="dash-finscore-card">
-        <div class="dash-finscore-title">ফিনস্কোর™</div>
-
-        <div class="dash-finscore-ring">
-            <canvas id="fin-score-canvas" width="160" height="160"></canvas>
-            <div class="dash-finscore-value">
-                <div class="dash-finscore-number" id="fin-score-value">{{ $finScore }}</div>
-                <div class="dash-finscore-max">/ ১০০</div>
+              </div>
+              <div class="ai-score-info">
+                <div class="ai-score-title">আর্থিক স্বাস্থ্য স্কোর</div>
+                <div class="ai-score-desc">আপনার সঞ্চয়ের অভ্যাস উন্নত হচ্ছে। আরও ভালো করার সুযোগ আছে।</div>
+              </div>
             </div>
-        </div>
 
-        <div class="dash-finscore-status"
-            style="color:{{ $finScore >= 70 ? 'var(--success)' : ($finScore >= 40 ? 'var(--warning)' : 'var(--danger)') }}">
-            {{ $finScore >= 70 ? '✅ চমৎকার আর্থিক অবস্থা' : ($finScore >= 40 ? '⚠️ উন্নতি প্রয়োজন' : '❌ জটিল অবস্থা') }}
-        </div>
-        <div class="dash-finscore-label">আপনার আর্থিক স্বাস্থ্য স্কোর</div>
-    </div>
-
-</div>
-
-{{-- ============================================================ --}}
-{{-- 5. CHARTS SECTION                                            --}}
-{{-- ============================================================ --}}
-<div class="dash-charts-grid">
-
-    {{-- LEFT: আয় বনাম খরচ Line Chart --}}
-    <div class="dash-chart-card">
-        <div class="dash-chart-header">
-            <div class="dash-chart-title"><span class="dash-title-icon"><i class="fas fa-chart-line"></i></span>আয় বনাম খরচ</div>
-            <div class="dash-chart-controls">
-                <button type="button" class="dash-chart-toggle active" data-chart-mode="line">Line</button>
-                <button type="button" class="dash-chart-toggle" data-chart-mode="bar">Bar</button>
-                <select id="chart-period" onchange="updateChart(this.value)" class="dash-chart-select">
-                    <option value="6months">গত ৬ মাস</option>
-                    <option value="12months">গত ১২ মাস</option>
-                </select>
+            <div class="ai-insight">
+              <strong>মূল অন্তর্দৃষ্টি:</strong> এই মাসে খাদ্য খরচ ১৮% কমেছে। বিনোদনে ব্যয় বেড়েছে তবে সঞ্চয়ের লক্ষ্যমাত্রা অর্জনে এখনও ট্র্যাকে আছেন।
             </div>
-        </div>
-        <canvas id="mainChart" height="120"></canvas>
-    </div>
 
-    {{-- RIGHT: খরচের বিশ্লেষণ Donut Chart --}}
-    <div class="dash-chart-card">
-        <div class="dash-chart-header">
-            <div class="dash-chart-title"><span class="dash-title-icon"><i class="fas fa-chart-pie"></i></span>খরচের বিশ্লেষণ</div>
+            <div class="ai-tip"><div class="ai-tip-dot dot-purple"></div> প্রতি মাসে আয়ের কমপক্ষে ৩০% সঞ্চয়ের চেষ্টা করুন।</div>
+            <div class="ai-tip"><div class="ai-tip-dot dot-cyan"></div> জরুরি তহবিলে ৬ মাসের ব্যয় রাখুন — এখন ৩.২ মাস আছে।</div>
+            <div class="ai-tip"><div class="ai-tip-dot dot-emerald"></div> বিনোদন বাজেট এই মাসে ৮৫% ব্যবহৃত — সতর্ক থাকুন।</div>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:center;min-height:240px;">
-            <canvas id="categoryChart" height="220"></canvas>
-        </div>
-    </div>
 
-</div>
-
-{{-- ============================================================ --}}
-{{-- 6. BUDGET STATUS                                             --}}
-{{-- ============================================================ --}}
-@if($budgets->count() > 0)
-<div class="card" style="margin-bottom:24px;">
-    <div class="card-title">
-        <span><i class="fas fa-wallet" style="color:var(--primary);margin-right:8px;"></i>বাজেট অবস্থা</span>
-        <a href="{{ route('budget.index') }}" class="btn btn-outline btn-sm">পরিচালনা</a>
-    </div>
-    <div class="dash-budget-grid">
-        @foreach($budgets as $budget)
-            @php
-                $budgetColor = $budget->percentage >= 100 ? 'var(--danger)' : ($budget->percentage >= 80 ? 'var(--warning)' : 'var(--success)');
-                $budgetBg = $budget->percentage >= 100 ? '#fee2e2' : ($budget->percentage >= 80 ? '#fef3c7' : '#d1fae5');
-                $budgetText = $budget->percentage >= 100 ? '#991b1b' : ($budget->percentage >= 80 ? '#92400e' : '#065f46');
-            @endphp
-            <div class="dash-budget-item">
-                <div class="dash-budget-top">
-                    <span class="dash-budget-cat">{{ $catLabels[$budget->category] ?? ucfirst($budget->category) }}</span>
-                    <span class="dash-budget-pct" style="background:{{ $budgetBg }};color:{{ $budgetText }};">
-                        {{ $budget->percentage }}%
-                    </span>
-                </div>
-                <div class="progress-bar" style="height:10px;border-radius:5px;">
-                    <div class="progress-fill" style="width:{{ min(100, $budget->percentage) }}%;background:{{ $budgetColor }};border-radius:5px;"></div>
-                </div>
-                <div class="dash-budget-amounts">
-                    <span>{{ $user->currency }}{{ number_format($budget->spent, 0) }} খরচ</span>
-                    <span>{{ $user->currency }}{{ number_format($budget->limit_amount, 0) }} সীমা</span>
-                </div>
-                @if($budget->over_limit)
-                    <div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:6px;">
-                        <i class="fas fa-exclamation-triangle"></i> সীমা ছাড়িয়েছে!
-                    </div>
-                @endif
+        <!-- FinScore -->
+        <div class="card">
+          <div class="finscore-wrap">
+            <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:10px;">
+              <div class="card-title-icon icon-cyan"><i class="fas fa-chart-pie"></i></div> FinScore বিশ্লেষণ
             </div>
-        @endforeach
-    </div>
-</div>
-@endif
-
-{{-- ============================================================ --}}
-{{-- 7. ANOMALY ALERTS                                            --}}
-{{-- ============================================================ --}}
-@if(count($anomalies) > 0)
-<div class="card" style="margin-bottom:24px;">
-    <div class="card-title">
-        <span><i class="fas fa-exclamation-triangle" style="color:var(--warning);margin-right:8px;"></i>অসামঞ্জস্য সনাক্ত</span>
-        <span class="badge badge-warning">{{ count($anomalies) }} টি</span>
-    </div>
-    @foreach($anomalies as $a)
-        <div class="dash-anomaly-card">
-            <div class="dash-anomaly-icon">📊</div>
-            <div>
-                <div class="dash-anomaly-msg">{{ $a['message'] }}</div>
-                <div class="dash-anomaly-meta">
-                    <span><i class="fas fa-calendar-day"></i> এই মাস: {{ $user->currency }}{{ number_format($a['this_month'], 0) }}</span>
-                    <span><i class="fas fa-chart-bar"></i> ৩ মাসের গড়: {{ $user->currency }}{{ number_format($a['avg_3months'], 0) }}</span>
-                </div>
+            <div class="finscore-ring-outer">
+              <svg viewBox="0 0 210 210" width="210" height="210">
+                <defs>
+                  <linearGradient id="fsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#7c3aed"/>
+                    <stop offset="100%" stop-color="#06b6d4"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="105" cy="105" r="90" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12"/>
+                <circle id="fs-ring" cx="105" cy="105" r="90" fill="none" stroke="url(#fsGrad)" stroke-width="12"
+                  stroke-linecap="round" stroke-dasharray="565.5" stroke-dashoffset="124.4" />
+              </svg>
+              <div class="finscore-center">
+                <div class="finscore-num">৭৮</div>
+                <div class="finscore-max">/ ১০০</div>
+              </div>
             </div>
+            <div class="finscore-status" style="color:var(--cyan-light);">🟢 চমৎকার</div>
+            <div class="finscore-desc">আপনার আর্থিক স্বাস্থ্য দারুণ! আরও ভালো করতে সঞ্চয় বাড়ান।</div>
+            <div class="finscore-bars">
+              <div class="fsbar-row">
+                <div class="fsbar-label">সঞ্চয়</div>
+                <div class="fsbar-track"><div class="fsbar-fill bar-ok" style="width:88%;background:linear-gradient(90deg,var(--emerald),#34d399);"></div></div>
+                <div class="fsbar-val" style="color:var(--emerald-light);">৮৮%</div>
+              </div>
+              <div class="fsbar-row">
+                <div class="fsbar-label">ব্যয় নিয়ন্ত্রণ</div>
+                <div class="fsbar-track"><div class="fsbar-fill" style="width:72%;background:linear-gradient(90deg,var(--purple),#a855f7);"></div></div>
+                <div class="fsbar-val" style="color:var(--purple-light);">৭২%</div>
+              </div>
+              <div class="fsbar-row">
+                <div class="fsbar-label">বাজেট</div>
+                <div class="fsbar-track"><div class="fsbar-fill" style="width:65%;background:linear-gradient(90deg,var(--cyan),#22d3ee);"></div></div>
+                <div class="fsbar-val" style="color:var(--cyan-light);">৬৫%</div>
+              </div>
+              <div class="fsbar-row">
+                <div class="fsbar-label">বিনিয়োগ</div>
+                <div class="fsbar-track"><div class="fsbar-fill bar-warn" style="width:45%;background:linear-gradient(90deg,var(--amber),#fbbf24);"></div></div>
+                <div class="fsbar-val" style="color:var(--amber-light);">৪৫%</div>
+              </div>
+            </div>
+          </div>
         </div>
-    @endforeach
-</div>
-@endif
+      </div>
 
-{{-- ============================================================ --}}
-{{-- 8. RECENT TRANSACTIONS TABLE                                 --}}
-{{-- ============================================================ --}}
-<div class="dash-table-card">
-    <div class="dash-table-header">
-        <div class="dash-table-title"><i class="fas fa-exchange-alt" style="color:var(--primary);margin-right:8px;"></i>সাম্প্রতিক লেনদেন</div>
-        <div class="dash-transactions-tools">
-            <input type="text" id="transaction-filter" class="dash-filter-input" placeholder="লেনদেন খুঁজুন...">
-            <a href="{{ route('transactions.index') }}" class="btn btn-outline btn-sm">সব দেখুন <i class="fas fa-arrow-right" style="font-size:10px;margin-left:4px;"></i></a>
-        </div>
-    </div>
-    <div class="table-container">
-        <table>
+      <!-- BOTTOM GRID: TRANSACTIONS + BUDGETS -->
+      <div class="bottom-grid fade-up delay-4">
+        <!-- Transactions -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-title-icon icon-emerald"><i class="fas fa-exchange-alt"></i></div>
+              সাম্প্রতিক লেনদেন
+            </div>
+            <div class="btn-outline-sm"><i class="fas fa-arrow-right"></i> সব দেখুন</div>
+          </div>
+          <table class="tx-table">
             <thead>
-                <tr>
-                    <th>তারিখ</th>
-                    <th>বিবরণ</th>
-                    <th>বিভাগ</th>
-                    <th>ধরন</th>
-                    <th style="text-align:right;">পরিমাণ</th>
-                </tr>
+              <tr>
+                <th>বিবরণ</th>
+                <th>ধরন</th>
+                <th>তারিখ</th>
+                <th>টাকা</th>
+              </tr>
             </thead>
             <tbody>
-                @forelse($recentTransactions as $t)
-                    <tr>
-                        <td style="color:var(--gray);white-space:nowrap;">
-                            {{ \Carbon\Carbon::parse($t->date)->translatedFormat('d M, Y') }}
-                        </td>
-                        <td style="font-weight:500;">{{ $t->description }}</td>
-                        <td>
-                            <span style="font-size:12px;">{{ $catLabels[$t->category] ?? ucfirst($t->category) }}</span>
-                        </td>
-                        <td>
-                            <span class="badge badge-{{ $t->type }}">{{ $typeLabels[$t->type] ?? ucfirst($t->type) }}</span>
-                        </td>
-                        <td style="text-align:right;font-weight:700;color:{{ $t->type === 'income' ? 'var(--success)' : ($t->type === 'expense' ? 'var(--danger)' : 'var(--info)') }}">
-                            {{ $t->type === 'income' ? '+' : '-' }}{{ $user->currency }}{{ number_format($t->amount, 0) }}
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" style="text-align:center;color:var(--gray);padding:40px 30px;">
-                            <i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:12px;color:var(--border);"></i>
-                            এখনো কোনো লেনদেন নেই।
-                            <a href="{{ route('transactions.create') }}" style="color:var(--primary);font-weight:600;">আপনার প্রথমটি যোগ করুন!</a>
-                        </td>
-                    </tr>
-                @endforelse
+              <tr class="tx-row">
+                <td>
+                  <div class="tx-cat">
+                    <div class="tx-cat-icon" style="background:rgba(16,185,129,0.12);color:var(--emerald-light);">💼</div>
+                    <div><div class="tx-cat-name">বেতন</div><div class="tx-cat-date">০১ এপ্রিল</div></div>
+                  </div>
+                </td>
+                <td><span class="tx-type type-income"><i class="fas fa-arrow-down" style="font-size:10px;"></i> আয়</span></td>
+                <td style="color:var(--text-muted);font-size:12px;">১ এপ্রিল</td>
+                <td class="tx-amount amount-income">+৳৪৫,০০০</td>
+              </tr>
+              <tr class="tx-row">
+                <td>
+                  <div class="tx-cat">
+                    <div class="tx-cat-icon" style="background:rgba(244,63,94,0.12);color:var(--rose-light);">🛒</div>
+                    <div><div class="tx-cat-name">মুদিখানা</div><div class="tx-cat-date">০৩ এপ্রিল</div></div>
+                  </div>
+                </td>
+                <td><span class="tx-type type-expense"><i class="fas fa-arrow-up" style="font-size:10px;"></i> ব্যয়</span></td>
+                <td style="color:var(--text-muted);font-size:12px;">৩ এপ্রিল</td>
+                <td class="tx-amount amount-expense">-৳৩,৪৫০</td>
+              </tr>
+              <tr class="tx-row">
+                <td>
+                  <div class="tx-cat">
+                    <div class="tx-cat-icon" style="background:rgba(6,182,212,0.12);color:var(--cyan-light);">🏦</div>
+                    <div><div class="tx-cat-name">মাসিক সঞ্চয়</div><div class="tx-cat-date">০৫ এপ্রিল</div></div>
+                  </div>
+                </td>
+                <td><span class="tx-type type-saving"><i class="fas fa-piggy-bank" style="font-size:10px;"></i> সঞ্চয়</span></td>
+                <td style="color:var(--text-muted);font-size:12px;">৫ এপ্রিল</td>
+                <td class="tx-amount amount-saving">+৳১০,০০০</td>
+              </tr>
+              <tr class="tx-row">
+                <td>
+                  <div class="tx-cat">
+                    <div class="tx-cat-icon" style="background:rgba(244,63,94,0.12);color:var(--rose-light);">⚡</div>
+                    <div><div class="tx-cat-name">বিদ্যুৎ বিল</div><div class="tx-cat-date">০৮ এপ্রিল</div></div>
+                  </div>
+                </td>
+                <td><span class="tx-type type-expense"><i class="fas fa-arrow-up" style="font-size:10px;"></i> ব্যয়</span></td>
+                <td style="color:var(--text-muted);font-size:12px;">৮ এপ্রিল</td>
+                <td class="tx-amount amount-expense">-৳১,৮৯০</td>
+              </tr>
+              <tr class="tx-row">
+                <td>
+                  <div class="tx-cat">
+                    <div class="tx-cat-icon" style="background:rgba(245,158,11,0.12);color:var(--amber-light);">🎮</div>
+                    <div><div class="tx-cat-name">বিনোদন</div><div class="tx-cat-date">১২ এপ্রিল</div></div>
+                  </div>
+                </td>
+                <td><span class="tx-type type-expense"><i class="fas fa-arrow-up" style="font-size:10px;"></i> ব্যয়</span></td>
+                <td style="color:var(--text-muted);font-size:12px;">১২ এপ্রিল</td>
+                <td class="tx-amount amount-expense">-৳২,৩৪০</td>
+              </tr>
             </tbody>
-        </table>
-    </div>
+          </table>
+        </div>
+
+        <!-- Budgets -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-title-icon icon-amber"><i class="fas fa-wallet"></i></div>
+              বাজেট অবস্থা
+            </div>
+            <div class="btn-outline-sm"><i class="fas fa-plus"></i> নতুন</div>
+          </div>
+          <div class="budget-list">
+            <div class="budget-card budget-ok">
+              <div class="budget-top">
+                <div class="budget-cat">
+                  <div class="budget-cat-icon" style="background:rgba(16,185,129,0.12);color:var(--emerald-light);">🛒</div>
+                  <div class="budget-cat-name">খাদ্য</div>
+                </div>
+                <div class="budget-pct pct-ok">৬৮%</div>
+              </div>
+              <div class="budget-bar"><div class="budget-fill bar-ok" style="width:68%;"></div></div>
+              <div class="budget-amounts"><span>৳৬,৮০০ ব্যয়</span><span>৳১০,০০০ লিমিট</span></div>
+            </div>
+            <div class="budget-card budget-warn">
+              <div class="budget-top">
+                <div class="budget-cat">
+                  <div class="budget-cat-icon" style="background:rgba(245,158,11,0.12);color:var(--amber-light);">🎮</div>
+                  <div class="budget-cat-name">বিনোদন</div>
+                </div>
+                <div class="budget-pct pct-warn">৮৫%</div>
+              </div>
+              <div class="budget-bar"><div class="budget-fill bar-warn" style="width:85%;"></div></div>
+              <div class="budget-amounts"><span>৳৪,২৫০ ব্যয়</span><span>৳৫,০০০ লিমিট</span></div>
+            </div>
+            <div class="budget-card budget-danger">
+              <div class="budget-top">
+                <div class="budget-cat">
+                  <div class="budget-cat-icon" style="background:rgba(244,63,94,0.12);color:var(--rose-light);">👗</div>
+                  <div class="budget-cat-name">পোশাক</div>
+                </div>
+                <div class="budget-pct pct-danger">১০৮%</div>
+              </div>
+              <div class="budget-bar"><div class="budget-fill bar-danger" style="width:100%;"></div></div>
+              <div class="budget-amounts"><span>৳৫,৪০০ ব্যয়</span><span>৳৫,০০০ লিমিট</span></div>
+            </div>
+            <div class="budget-card budget-ok">
+              <div class="budget-top">
+                <div class="budget-cat">
+                  <div class="budget-cat-icon" style="background:rgba(6,182,212,0.12);color:var(--cyan-light);">🚗</div>
+                  <div class="budget-cat-name">পরিবহন</div>
+                </div>
+                <div class="budget-pct pct-ok">৪২%</div>
+              </div>
+              <div class="budget-bar"><div class="budget-fill bar-ok" style="width:42%;"></div></div>
+              <div class="budget-amounts"><span>৳২,১০০ ব্যয়</span><span>৳৫,০০০ লিমিট</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANOMALY -->
+      <div class="anomaly-wrap card fade-up delay-5">
+        <div class="card-head">
+          <div class="card-title">
+            <div class="card-title-icon" style="background:rgba(245,158,11,0.15);color:var(--amber-light);"><i class="fas fa-exclamation-triangle"></i></div>
+            ব্যয় সতর্কতা
+          </div>
+          <div class="btn-outline-sm"><i class="fas fa-times"></i> বন্ধ করুন</div>
+        </div>
+        <div class="anomaly-card">
+          <div class="anomaly-icon-wrap">⚠️</div>
+          <div>
+            <div class="anomaly-msg">পোশাক খাতে ব্যয় স্বাভাবিকের চেয়ে উল্লেখযোগ্যভাবে বেশি — বাজেট ছাড়িয়ে গেছে।</div>
+            <div class="anomaly-meta">
+              <span class="anomaly-chip"><i class="fas fa-calendar" style="font-size:10px;"></i> এই মাস: ৳৫,৪০০</span>
+              <span class="anomaly-chip"><i class="fas fa-chart-bar" style="font-size:10px;"></i> গড়: ৳৩,২০০</span>
+              <span class="anomaly-chip" style="color:var(--rose-light);">↑ ৬৮.৭% বৃদ্ধি</span>
+            </div>
+          </div>
+        </div>
+        <div class="anomaly-card" style="border-color:rgba(6,182,212,0.2);background:linear-gradient(135deg,rgba(6,182,212,0.05),rgba(124,58,237,0.03));">
+          <div class="anomaly-icon-wrap" style="background:rgba(6,182,212,0.15);">💡</div>
+          <div>
+            <div class="anomaly-msg" style="color:var(--cyan-light);">বিনোদন বাজেটে মাত্র ১৫% অবশিষ্ট — এই মাস শেষে অতিক্রম করতে পারে।</div>
+            <div class="anomaly-meta">
+              <span class="anomaly-chip"><i class="fas fa-calendar" style="font-size:10px;"></i> এই মাস: ৳৪,২৫০</span>
+              <span class="anomaly-chip"><i class="fas fa-chart-bar" style="font-size:10px;"></i> গড়: ৳৩,৮০০</span>
+              <span class="anomaly-chip" style="color:var(--amber-light);">↑ ১১.৮% বৃদ্ধি</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
 </div>
 
-@endsection
-
-@push('scripts')
 <script>
-    // ===== CHART DATA FROM BLADE =====
-    let chartData = @json($chartData);
-    const categoryData = @json($categoryBreakdown);
-
-    // ===== CATEGORY LABELS (BANGLA) =====
-    const catLabelsMap = @json($catLabels);
-
-    // ===== MAIN LINE CHART =====
-    let mainChart;
-    let chartMode = 'line';
-
-    function getThemePalette() {
-        const body = document.body;
-        if (body.classList.contains('theme-white-green')) {
-            return {
-                income: '#16a34a',
-                expense: '#166534',
-                saving: '#059669',
-                donut: ['#16a34a', '#22c55e', '#15803d', '#10b981', '#34d399', '#047857', '#84cc16', '#65a30d'],
-                grid: '#d1fae5',
-                ticks: '#4d7c61',
-                tooltipBg: '#14532d',
-            };
-        }
-        if (body.classList.contains('theme-white-black')) {
-            return {
-                income: '#111827',
-                expense: '#27272a',
-                saving: '#475569',
-                donut: ['#111827', '#27272a', '#3f3f46', '#52525b', '#71717a', '#a1a1aa', '#18181b', '#09090b'],
-                grid: '#e4e4e7',
-                ticks: '#52525b',
-                tooltipBg: '#111111',
-            };
-        }
-        if (body.classList.contains('theme-blue-red')) {
-            return {
-                income: '#93c5fd',
-                expense: '#ef4444',
-                saving: '#f8fafc',
-                donut: ['#ef4444', '#f87171', '#93c5fd', '#dbeafe', '#38bdf8', '#0ea5e9', '#fca5a5', '#60a5fa'],
-                grid: 'rgba(191,219,254,0.24)',
-                ticks: '#dbeafe',
-                tooltipBg: '#082456',
-            };
-        }
-        return {
-            income: '#22c55e',
-            expense: '#ef4444',
-            saving: '#fca5a5',
-            donut: ['#ef4444', '#f87171', '#fb7185', '#f59e0b', '#fca5a5', '#22c55e', '#38bdf8', '#a78bfa'],
-            grid: '#2b2b33',
-            ticks: '#b7b7c2',
-            tooltipBg: '#09090b',
-        };
+document.addEventListener('DOMContentLoaded', () => {
+  const ctx = document.getElementById('monthlyChart');
+  if (!ctx) return;
+  const labels = ['নভেম্বর','ডিসেম্বর','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল'];
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'আয়', data: [38000,42000,40000,44000,43000,45230], backgroundColor: 'rgba(16,185,129,0.75)', borderRadius: 8, borderSkipped: false },
+        { label: 'ব্যয়', data: [31000,33000,29000,36000,37500,30756], backgroundColor: 'rgba(244,63,94,0.7)', borderRadius: 8, borderSkipped: false },
+        { label: 'সঞ্চয়', data: [7000,9000,11000,8000,5500,14474], type: 'line', borderColor: 'rgba(6,182,212,0.9)', backgroundColor: 'rgba(6,182,212,0.08)', borderWidth: 2.5, pointBackgroundColor: 'rgba(6,182,212,1)', pointRadius: 5, pointHoverRadius: 8, tension: 0.4, fill: true }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: 'rgba(241,245,249,0.7)', font: { size: 12 } } },
+        tooltip: { backgroundColor: 'rgba(13,21,37,0.95)', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, padding: 14, cornerRadius: 12, titleColor: '#f1f5f9', bodyColor: '#94a3b8', callbacks: { label: ctx => ` ৳${ctx.raw.toLocaleString()}` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: 'rgba(148,163,184,0.6)', font: { size: 12 } }, border: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false }, ticks: { color: 'rgba(148,163,184,0.6)', font: { size: 11 }, callback: v => '৳'+v.toLocaleString() }, border: { display: false } }
+      },
+      interaction: { intersect: false, mode: 'index' }
     }
-
-    function initMainChart(data, mode = chartMode) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        if (mainChart) mainChart.destroy();
-        const palette = getThemePalette();
-        const surfaceColor = getComputedStyle(document.body).getPropertyValue('--surface').trim() || '#ffffff';
-
-        const incomeGrad = ctx.createLinearGradient(0, 0, 0, 300);
-        incomeGrad.addColorStop(0, `${palette.income}4D`);
-        incomeGrad.addColorStop(1, `${palette.income}08`);
-
-        const expenseGrad = ctx.createLinearGradient(0, 0, 0, 300);
-        expenseGrad.addColorStop(0, `${palette.expense}4D`);
-        expenseGrad.addColorStop(1, `${palette.expense}08`);
-
-        const savingGrad = ctx.createLinearGradient(0, 0, 0, 300);
-        savingGrad.addColorStop(0, `${palette.saving}4D`);
-        savingGrad.addColorStop(1, `${palette.saving}08`);
-
-        mainChart = new Chart(ctx, {
-            type: mode,
-            data: {
-                labels: data.labels,
-                datasets: [
-                    {
-                        label: 'আয়',
-                        data: data.income,
-                        borderColor: palette.income,
-                        backgroundColor: incomeGrad,
-                        tension: 0.4,
-                        fill: mode === 'line',
-                        borderWidth: 2.5,
-                        pointRadius: 4,
-                        pointBackgroundColor: palette.income,
-                        pointBorderColor: surfaceColor,
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 6,
-                        borderRadius: mode === 'bar' ? 6 : 0,
-                        maxBarThickness: 24,
-                    },
-                    {
-                        label: 'খরচ',
-                        data: data.expense,
-                        borderColor: palette.expense,
-                        backgroundColor: expenseGrad,
-                        tension: 0.4,
-                        fill: mode === 'line',
-                        borderWidth: 2.5,
-                        pointRadius: 4,
-                        pointBackgroundColor: palette.expense,
-                        pointBorderColor: surfaceColor,
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 6,
-                        borderRadius: mode === 'bar' ? 6 : 0,
-                        maxBarThickness: 24,
-                    },
-                    {
-                        label: 'সঞ্চয়',
-                        data: data.saving,
-                        borderColor: palette.saving,
-                        backgroundColor: savingGrad,
-                        tension: 0.4,
-                        fill: mode === 'line',
-                        borderWidth: 2.5,
-                        pointRadius: 4,
-                        pointBackgroundColor: palette.saving,
-                        pointBorderColor: surfaceColor,
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 6,
-                        borderRadius: mode === 'bar' ? 6 : 0,
-                        maxBarThickness: 24,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            font: { size: 12, family: 'Inter', weight: '500' },
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            padding: 20,
-                        }
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: palette.tooltipBg,
-                        titleFont: { size: 13, family: 'Inter' },
-                        bodyFont: { size: 12, family: 'Inter' },
-                        padding: 12,
-                        cornerRadius: 10,
-                        callbacks: {
-                            label: function(ctx) {
-                                return ctx.dataset.label + ': {{ $user->currency }}' + Math.round(ctx.raw).toLocaleString();
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: palette.grid, drawBorder: false },
-                        ticks: {
-                            callback: v => '{{ $user->currency }}' + Math.round(v).toLocaleString(),
-                            font: { size: 11, family: 'Inter' },
-                            color: palette.ticks,
-                        },
-                        border: { display: false }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: {
-                            font: { size: 11, family: 'Inter' },
-                            color: palette.ticks,
-                        },
-                        border: { display: false }
-                    }
-                }
-            }
-        });
-    }
-
-    // ===== CATEGORY DONUT CHART =====
-    function initCategoryChart(data) {
-        const ctx = document.getElementById('categoryChart').getContext('2d');
-        const palette = getThemePalette();
-        const rawKeys = Object.keys(data);
-        const values = Object.values(data);
-        const colors = palette.donut;
-
-        // Convert raw keys to Bangla labels
-        const labels = rawKeys.map(key => catLabelsMap[key] || key);
-
-        if (labels.length === 0) {
-            // Show empty state message on canvas
-            ctx.font = '14px Inter, sans-serif';
-            ctx.fillStyle = palette.ticks;
-            ctx.textAlign = 'center';
-            ctx.fillText('খরচের লেনদেন যোগ করুন', ctx.canvas.width / 2, ctx.canvas.height / 2 - 10);
-            ctx.font = '12px Inter, sans-serif';
-            ctx.fillText('চার্ট এখানে দেখা যাবে', ctx.canvas.width / 2, ctx.canvas.height / 2 + 15);
-            return;
-        }
-
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: colors.slice(0, labels.length),
-                    borderWidth: 0,
-                    hoverOffset: 8,
-                    spacing: 2,
-                    borderRadius: 4,
-                }]
-            },
-            options: {
-                responsive: true,
-                cutout: '68%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: { size: 11, family: 'Inter', weight: '500' },
-                            boxWidth: 12,
-                            boxHeight: 12,
-                            padding: 14,
-                            usePointStyle: true,
-                            pointStyle: 'rectRounded',
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: palette.tooltipBg,
-                        titleFont: { size: 13, family: 'Inter' },
-                        bodyFont: { size: 12, family: 'Inter' },
-                        padding: 12,
-                        cornerRadius: 10,
-                        callbacks: {
-                            label: ctx => `${ctx.label}: {{ $user->currency }}${Math.round(ctx.raw).toLocaleString()}`
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // ===== FIN SCORE RING (Canvas) =====
-    function drawFinScoreRing(score) {
-        const canvas = document.getElementById('fin-score-canvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const size = canvas.width;
-        const center = size / 2;
-        const radius = center - 14;
-        const lineWidth = 12;
-        const startAngle = -Math.PI / 2;
-        const endAngle = startAngle + (2 * Math.PI * score / 100);
-
-        // Determine color
-        let color;
-        if (score >= 70) color = '#10b981';
-        else if (score >= 40) color = '#f59e0b';
-        else color = '#ef4444';
-
-        ctx.clearRect(0, 0, size, size);
-
-        // Background ring
-        ctx.beginPath();
-        ctx.arc(center, center, radius, 0, 2 * Math.PI);
-        ctx.strokeStyle = '#f1f5f9';
-        ctx.lineWidth = lineWidth;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-
-        // Score ring
-        if (score > 0) {
-            ctx.beginPath();
-            ctx.arc(center, center, radius, startAngle, endAngle);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lineWidth;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-        }
-
-        // Glow effect
-        if (score > 0) {
-            ctx.beginPath();
-            ctx.arc(center, center, radius, startAngle, endAngle);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lineWidth + 6;
-            ctx.lineCap = 'round';
-            ctx.globalAlpha = 0.15;
-            ctx.stroke();
-            ctx.globalAlpha = 1;
-        }
-    }
-
-    // ===== PERIOD SWITCHER =====
-    async function switchPeriod(period) {
-        document.querySelectorAll('.dash-period-pill').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.getElementById(`period-btn-${period}`).classList.add('active');
-
-        try {
-            const res = await apiCall(`/transactions/summary/${period}`);
-            if (res) {
-                const currency = '{{ $user->currency }}';
-                document.getElementById('stat-income').textContent = currency + Math.round(res.income).toLocaleString('en-US');
-                document.getElementById('stat-expense').textContent = currency + Math.round(res.expense).toLocaleString('en-US');
-                document.getElementById('stat-saving').textContent = currency + Math.round(res.saving).toLocaleString('en-US');
-                document.getElementById('stat-balance').textContent = currency + Math.round(res.balance).toLocaleString('en-US');
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    // ===== UPDATE CHART =====
-    async function updateChart(type) {
-        try {
-            const res = await apiCall(`/dashboard/chart-data?type=${type}`);
-            if (res.data) {
-                chartData = res.data;
-                initMainChart(chartData, chartMode);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    // ===== GENERATE AI =====
-    async function generateAI() {
-        const btn = document.getElementById('ai-generate-btn');
-        const heroBtn = document.getElementById('ai-generate-btn-hero');
-        if (btn) {
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> বিশ্লেষণ হচ্ছে...';
-            btn.disabled = true;
-        }
-        if (heroBtn) {
-            heroBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> বিশ্লেষণ হচ্ছে...';
-            heroBtn.disabled = true;
-        }
-
-        try {
-            const res = await apiCall('/ai/generate', 'POST');
-            showToast(res.message || 'এআই বিশ্লেষণ শুরু হয়েছে!', 'success');
-
-            setTimeout(async () => {
-                try {
-                    const suggestion = await apiCall('/ai/suggestions');
-                    if (suggestion && suggestion.success && suggestion.data) {
-                        showToast('এআই বিশ্লেষণ সম্পন্ন! পৃষ্ঠা রিফ্রেশ হচ্ছে...', 'success');
-                        setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                        setTimeout(() => window.location.reload(), 3000);
-                    }
-                } catch (pollErr) {
-                    setTimeout(() => window.location.reload(), 3000);
-                }
-            }, 2000);
-        } catch (e) {
-            showToast(e.message || 'এআই তৈরি ব্যর্থ হয়েছে। আবার চেষ্টা করুন।', 'danger');
-        }
-
-        setTimeout(() => {
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-robot"></i> এআই রিফ্রেশ';
-                btn.disabled = false;
-            }
-            if (heroBtn) {
-                heroBtn.innerHTML = '<i class="fas fa-robot"></i> এআই রিফ্রেশ';
-                heroBtn.disabled = false;
-            }
-        }, 5000);
-    }
-
-    // ===== INIT =====
-    document.addEventListener('DOMContentLoaded', () => {
-        initMainChart(chartData, chartMode);
-        initCategoryChart(categoryData);
-        drawFinScoreRing({{ $finScore }});
-
-        document.querySelectorAll('.dash-chart-toggle').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                chartMode = btn.dataset.chartMode;
-                document.querySelectorAll('.dash-chart-toggle').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                initMainChart(chartData, chartMode);
-            });
-        });
-
-        const txFilter = document.getElementById('transaction-filter');
-        if (txFilter) {
-            txFilter.addEventListener('input', (e) => {
-                const keyword = e.target.value.trim().toLowerCase();
-                document.querySelectorAll('.dash-table-card tbody tr').forEach((row) => {
-                    const rowText = row.textContent.toLowerCase();
-                    row.style.display = rowText.includes(keyword) ? '' : 'none';
-                });
-            });
-        }
-    });
+  });
+});
 </script>
-@endpush
+</body>
+</html>

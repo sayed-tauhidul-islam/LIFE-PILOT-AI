@@ -1,0 +1,243 @@
+:root {
+  /* default system / fallback */
+  --bg-base: white;
+  --bg-surface: #f8fafc;
+  --bg-card: #ffffff;
+  --border: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --accent: #4F46E5;
+  --accent-bg: #EEF2FF;
+  --income: #16A34A;
+  --expense: #DC2626;
+  --saving: #D97706;
+}
+
+/* Mood overrides via [data-mood] attribute */
+:root[data-mood='system'] {
+  /* leave defaults — system follows OS via prefers-color-scheme in app */
+}
+
+:root[data-mood='dark'] {
+  --bg-base: #060818;
+  --bg-surface: #0B0F23;
+  --bg-card: #0F1629;
+  --border: #1E2640;
+  --text-primary: #E2E8F0;
+  --text-muted: #475569;
+  --accent: #818CF8;
+  --accent-bg: #1E1B4B;
+  --income: #4ADE80;
+  --expense: #F87171;
+  --saving: #FBBF24;
+}
+
+:root[data-mood='light'] {
+  --bg-base: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-card: #F1F5F9;
+  --border: #E2E8F0;
+  --text-primary: #0F172A;
+  --text-muted: #64748B;
+  --accent: #4F46E5;
+  --accent-bg: #EEF2FF;
+  --income: #16A34A;
+  --expense: #DC2626;
+  --saving: #D97706;
+}
+
+:root[data-mood='midnight'] {
+  --bg-base: #020B18;
+  --bg-surface: #041628;
+  --bg-card: #072035;
+  --border: #0D3050;
+  --text-primary: #BAE6FD;
+  --text-muted: #38BDF8;
+  --accent: #0EA5E9;
+  --accent-bg: #082F49;
+  --income: #34D399;
+  --expense: #FB7185;
+  --saving: #FCD34D;
+}
+
+:root[data-mood='emerald'] {
+  --bg-base: #021208;
+  --bg-surface: #041F0E;
+  --bg-card: #062B14;
+  --border: #0D4A22;
+  --text-primary: #D1FAE5;
+  --text-muted: #6EE7B7;
+  --accent: #10B981;
+  --accent-bg: #064E3B;
+  --income: #34D399;
+  --expense: #F87171;
+  --saving: #FCD34D;
+}
+
+:root[data-mood='sunset'] {
+  --bg-base: #160A00;
+  --bg-surface: #1F1000;
+  --bg-card: #2D1800;
+  --border: #4A2800;
+  --text-primary: #FEF3C7;
+  --text-muted: #FCD34D;
+  --accent: #F59E0B;
+  --accent-bg: #451A03;
+  --income: #4ADE80;
+  --expense: #F87171;
+  --saving: #FCD34D;
+}
+
+/* Global layout variables */
+html,body,#app-root { height:100%; }
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Hind Siliguri', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.app-container { min-height:100vh; display:flex; }
+.sidebar { width:220px; background: var(--bg-surface); border-right:1px solid var(--border); }
+.main { flex:1; padding:20px; background: linear-gradient(180deg, var(--bg-base), var(--bg-surface)); }
+
+.mood-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.mood-card { background:var(--bg-card); border:1px solid var(--border); padding:12px; border-radius:8px; cursor:pointer; transform-origin:center; transition:transform .18s ease, border-color .18s ease; display:flex; justify-content:space-between; align-items:center; }
+.mood-card:hover { transform:scale(1.03); }
+.mood-card.active { border:2px solid var(--accent); }
+.swatches { display:flex; gap:8px; }
+.dot { width:12px; height:12px; border-radius:50%; display:inline-block; box-shadow:0 0 0 1px rgba(0,0,0,.08) inset; }
+
+.contrast-control input[type=range] { width:100%; }
+.preset-buttons { display:flex; gap:8px; margin-top:8px; }
+
+/* Ultra Login Design Additions */
+:root {
+  --ultra-glass: rgba(255, 255, 255, 0.05);
+  --ultra-glass-dark: rgba(15, 15, 30, 0.4);
+  --neon-purple: #8b5cf6;
+  --neon-cyan: #06b6d4;
+  --neon-glow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
+  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.5), 0 0 40px rgba(6, 182, 212, 0.3);
+  --shadow-ultra: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --bg-gradient-ultra: linear-gradient(135deg, #0c0c1a 0%, #1a0d2e 50%, #0f0f23 100%);
+}
+
+[data-mood='dark'], [data-mood='midnight'], [data-mood='emerald'], [data-mood='sunset'] {
+  --ultra-glass: rgba(255, 255, 255, 0.08);
+  --ultra-glass-dark: rgba(30, 30, 60, 0.6);
+}
+
+/* Keyframes for Ultra Effects */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: var(--neon-glow); }
+  50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.8), 0 0 60px rgba(139, 92, 246, 0.6); }
+}
+
+@keyframes rotateOrb {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1.05); }
+}
+
+@keyframes particlesFloat {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100px) scale(1); opacity: 0; }
+}
+
+/* Ultra BG Particles */
+.ultra-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: var(--bg-gradient-ultra);
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: linear-gradient(45deg, var(--neon-purple), var(--neon-cyan));
+  border-radius: 50%;
+  animation: particlesFloat linear infinite;
+}
+
+/* Glass Card Ultra */
+.glass-card-ultra {
+  background: var(--ultra-glass);
+  backdrop-filter: blur(50px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: var(--shadow-ultra), var(--neon-glow);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.glass-card-ultra:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 35px 70px -15px rgba(0,0,0,0.6), var(--neon-glow), var(--glow-cyan);
+}
+
+/* Input Ultra */
+.input-ultra {
+  background: var(--ultra-glass-dark);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.3s ease;
+}
+
+.input-ultra:focus {
+  outline: none;
+  border-color: var(--neon-purple);
+  box-shadow: var(--neon-glow);
+  transform: scale(1.02);
+}
+
+/* Button Ultra */
+.btn-ultra {
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+  background-size: 200% 200%;
+  animation: shimmer 3s ease-in-out infinite;
+  box-shadow: var(--neon-glow);
+  transition: all 0.3s ease;
+}
+
+.btn-ultra:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 20px 40px rgba(139,92,246,0.5);
+}
+
+/* Orb Logo */
+.orb {
+  animation: rotateOrb 20s linear infinite, pulseGlow 2s ease-in-out infinite;
+}
+
+/* Entrance Animation */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fade-up {
+  animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}

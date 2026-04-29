@@ -259,6 +259,78 @@ db.createCollection("prayer_times", {
   }
 });
 
+db.createCollection("transactions", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["user_id", "type", "category", "amount", "date", "period"],
+      properties: {
+        user_id: {
+          bsonType: ["string", "int"],
+          description: "Reference to user - required"
+        },
+        type: {
+          enum: ["income", "expense", "saving"],
+          description: "Transaction type - required"
+        },
+        category: {
+          bsonType: "string",
+          description: "Transaction category - required"
+        },
+        amount: {
+          bsonType: ["double", "int"],
+          minimum: 0,
+          description: "Transaction amount - required"
+        },
+        description: {
+          bsonType: "string"
+        },
+        date: {
+          bsonType: ["date", "string"],
+          description: "Transaction date - required"
+        },
+        period: {
+          enum: ["daily", "weekly", "monthly", "annual"],
+          description: "Period - required"
+        },
+        tags: {
+          bsonType: "array"
+        },
+        is_recurring: {
+          bsonType: "bool"
+        },
+        recurring_interval: {
+          enum: ["daily", "weekly", "monthly"]
+        },
+        payment_method: {
+          enum: ["cash", "card", "bank", "mobile"]
+        },
+        location: {
+          bsonType: "string"
+        },
+        receipt_url: {
+          bsonType: "string"
+        },
+        notes: {
+          bsonType: "string"
+        },
+        currency: {
+          bsonType: "string"
+        },
+        created_by_ai: {
+          bsonType: "bool"
+        },
+        created_at: {
+          bsonType: "date"
+        },
+        updated_at: {
+          bsonType: "date"
+        }
+      }
+    }
+  }
+});
+
 // Create indexes for better query performance
 db.users.createIndex({ "email": 1 }, { unique: true, sparse: true });
 db.users.createIndex({ "created_at": -1 });
@@ -278,6 +350,10 @@ db.tasks.createIndex({ "user_id": 1, "priority": -1 });
 
 db.prayer_times.createIndex({ "user_id": 1, "date": 1 });
 
+db.transactions.createIndex({ "user_id": 1, "date": -1 });
+db.transactions.createIndex({ "user_id": 1, "type": 1 });
+db.transactions.createIndex({ "user_id": 1, "category": 1 });
+
 print("Database 'lifepilot_ai' initialized successfully!");
-print("Collections created: users, routines, meetings, expenses, tasks, prayer_times");
+print("Collections created: users, routines, meetings, expenses, tasks, prayer_times, transactions");
 print("Indexes created for optimal query performance");
